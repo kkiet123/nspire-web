@@ -58,6 +58,21 @@
 - Cost: the repository needs `git clone --recursive` for its four submodules (nspire-io, zlib, freetype2, luna); GitHub's "Source code" zip leaves them out, so it doesn't build. The SDK first builds its own `arm-none-eabi` cross-compiler with `ndless-sdk/toolchain/build_toolchain.sh` (binutils 2.44, GCC 14.2.0, newlib 4.5.0.20241231, GDB 16.2, downloaded from GNU mirrors), which needs the GMP, MPFR, MPC, zlib and Python 3 development files. It is a POSIX shell script, so in practice Linux or WSL, neither of which is in our setup; C: is also short on space.
 - So: use the official `Ndless-r2023.zip` and check its SHA-256. Building only makes sense if we write our own calculator program, which this project doesn't need (PolyDumper and eMMUlate exist).
 
+## Our dump (2026-11-16)
+Dumped with PolyDumper 5.0 under Ndless r2023 after the OS update; files in `roms/` (kept out of git).
+
+| File | Bytes | SHA-256 | What it is |
+|---|---|---|---|
+| `boot1.img.tns` | 524,288 | `0a911a688af9522b6987aa62cf455f592dc37613c44e98de1507bb80d8b94f80` | boot ROM, full 512 KiB, no blank tail |
+| `boot2.img.tns` | 2,752,512 | `848c1f0c1a2e5fda049bb37a18f5ac627c7487e971d18ce8230421e334c35338` | boot2 partition (pages 0x40–0x57F); holds **Boot1.5 4.5.0.14**, which the OS 4.5 update installs there |
+| `diags.img.tns` | 917,504 | `23cb93f7203cf306c1c10414a1facdc13f972b20ed0d43f0a1f006670b529203` | Diags 3.2.0.7 |
+| `manuf.img.tns` | 131,072 | `9d400d59e72beaafa564acf1efb7c1c9ee51f9661a16e1e493de4ffcbe4729ab` | manufacturing data |
+| `TI-NspireCXCAS-4.5.5.79.tcc` | 13,784,836 | `629c7ec8c61fef902cc1fe610bceb49767f13d9d7875a8728490443433cf9232` | OS from education.ti.com |
+
+Decoded the way Firebird does (`flash_read_type`, `flash_component_info`):
+- Manuf: product 0x0F = **CX CAS**, features 0x05 = **HW A**, locale `en`, touchpad keypad (76), LCD 320×240 at 16 bpp, clock setting 0x561002 (132 MHz in Firebird's notes), SDRAM setting 0xFC018012 (Firebird's "large SDRAM" value), boot2 at 0x20000, bootdata at 0x2C0000, file system at 0x400000.
+- So Firebird's Create Flash dialog takes: model CX CAS, subtype HW-A, Manuf `manuf.img.tns`, Boot2 `boot2.img.tns`, OS the `.tcc`, Diags `diags.img.tns`. The dialog will say it found BOOT1.5 instead of BOOT2; that is expected after OS 4.x, and the first boot will show whether Firebird runs it.
+
 ## Risks
 - Ndless's persistent install can lose data or reboot-loop the calculator: back up its documents first.
 - One OS update from TI's software closes the Ndless route for that calculator.
@@ -75,8 +90,9 @@
 - The flash creator is part of the core, so the bridge can expose it ([3]) and the page can build the flash image in the browser. Nobody needs the desktop Firebird.
 
 ## Still open
-- [ ] Our calculator: TI-Nspire CX CAS on OS 3.2.3.1233 (2026-11-16), too old for Ndless. To do: update once to 4.5.5.79, then read the boot1 version.
-- [ ] PolyDumper's current version and what it writes on each model (its TI-Planet page refused an automated read).
+- [x] Our calculator: TI-Nspire CX CAS, HW A; updated from OS 3.2.3.1233 to 4.5.5.79 and dumped (see "Our dump").
+- [x] PolyDumper's current version and what it writes on each model: 5.0; on the CX it writes `boot1`, `boot1alt` (if present), `boot2`, `diags` and `manuf` as `.img.tns`.
+- [ ] Does Firebird boot our set (Boot1.5 in the boot2 partition)? Check in the desktop Firebird (v1.6, `firebird-emu-win64.zip`, 34,143,096 bytes from the GitHub release; a download, ask first) or at Phase 2.
 - [ ] CX II: what the "installer" file is, and whether the OS goes in after the first boot.
 - [ ] The judge's model (ask the teacher: part of the spec, not support).
 - [x] A free tool to copy files between a CX and the PC: TI-Nspire Computer Link 3.9.0.455.

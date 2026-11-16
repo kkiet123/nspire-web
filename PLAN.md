@@ -51,7 +51,8 @@ How the work flows: big picture first; then, for each component, research it (fi
 **Lane C: TI files (team)**
 1. Done: a TI-Nspire CX CAS on OS 3.2.3.1233, older than anything Ndless supports.
 2. Done (2026-11-16): Computer Link installed, documents backed up, OS updated once to 4.5.5.79. No updates after this.
-3. **Next:** read the boot1 version (Home → 5 Settings → 4 Status → About), install Ndless from `tools/ndless-r2023/`, then PolyDumper: dump boot1, boot2 and manuf; keep the 4.5.5.79 OS file for the emulator (`research/6-ti-files.md`).
+3. Done (2026-11-16): Ndless, then PolyDumper; boot1, boot2, diags and manuf are in `roms/` with the 4.5.5.79 OS file (`research/6-ti-files.md`).
+4. Optional: boot the set in the desktop Firebird first, to catch a bad dump before Phase 2.
 
 **Together, once the lanes meet**
 1. Phase 2: first boot in the browser. Needs lane A, step 9 and lane C, step 3.
