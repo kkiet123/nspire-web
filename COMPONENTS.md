@@ -55,9 +55,9 @@ What `<nspire-emu>` is made of, how the parts talk to each other, and what we st
 - **Parts:** loading the wasm; the message protocol with [1]; the run loop (run a slice, give the thread back, repeat); pacing to real speed, and turbo; the frame pipe; virtual files (Emscripten's in-memory file system) holding boot1 and the flash image; a queue for file transfers; errors and reset.
 - **To research:**
   - [ ] Slice length: input delay against throughput (4 ms? 16 ms?), and how to give the thread back without the browser's timer delay (`setTimeout` or `MessageChannel`).
-  - [ ] Pacing: how Firebird's throttle (`throttle_timer_wait`, `cycle_count_delta`, the scheduler in `schedule.c`) maps onto the wall clock in a worker.
+  - [ ] Pacing: how Firebird's throttle (`throttle_timer_wait`, `cycle_count_delta`, the scheduler in `schedule.c`) maps onto the wall clock in a worker. The core side is in `research/3-4-core-loop.md`: run the core with `turbo_mode` on and pace in the worker by 10 ms emulated steps.
   - [ ] Frames: post a buffer on each change, or draw from the worker into an `OffscreenCanvas` that [1] hands over? Convert RGB565 to RGBA in C++ (as the old port's `paintLCD` did) or in JavaScript?
-  - [ ] Knowing when the LCD changed: hook the LCD controller instead of redrawing at 60 Hz (on Firebird's TODO).
+  - [x] Knowing when the LCD changed: hook the LCD controller instead of redrawing at 60 Hz (on Firebird's TODO). Answer: the bridge provides `gif_new_frame()`, which `lcd_event` calls on every refresh.
   - [ ] What browsers do to a worker in a hidden tab, and keeping the emulated clock right afterwards.
 
 ### 3. Bridge (`web/bridge.cpp`; Claude)
@@ -65,9 +65,9 @@ What `<nspire-emu>` is made of, how the parts talk to each other, and what we st
 - **Callbacks the core expects (contract D, declared in `core/emu.h`):** `gui_do_stuff`, `gui_show_speed`, `gui_status_printf`, `gui_debug_printf`, `gui_debug_vprintf`, `gui_perror`, `gui_putchar` and `gui_getchar` (serial port), `gui_set_busy`, `gui_usblink_changed`, `gui_debugger_entered_or_left`, `gui_debugger_request_input`, `throttle_timer_on`, `throttle_timer_off`, `throttle_timer_wait`.
 - **Examples to learn from:** `emuthread.cpp` (the Qt app), `headless/main.cpp` (a small frontend without Qt), `emscripten/main.cpp` (the old web port; every callback is a stub).
 - **To research:**
-  - [ ] How `emu_loop()` in `core/emu.cpp` works, so a "run one slice and return" entry point can reuse it with a small patch. The old port copied the loop body instead.
-  - [ ] Errors: `error()` → `return_to_loop()` → `emu_longjmp`, which is `assert(false)` under Emscripten today. Make it a real longjmp.
-  - [ ] Which callbacks matter in the browser, and where their output goes (console, status line, speed %).
+  - [x] How `emu_loop()` in `core/emu.cpp` works, so a "run one slice and return" entry point can reuse it with a small patch. The old port copied the loop body instead. Answer: split it into `emu_loop_begin()` + `emu_loop_run()` (`research/3-4-core-loop.md`).
+  - [x] Errors: `error()` → `return_to_loop()` → `emu_longjmp`, which is `assert(false)` under Emscripten today. Make it a real longjmp. Answer: setjmp/longjmp via wasm exceptions, and no interactive debugger.
+  - [x] Which callbacks matter in the browser, and where their output goes (console, status line, speed %). Answer: the contract D table in `research/3-4-core-loop.md`.
 
 ### 4. Emulator core (`firebird/core`, reused; Claude for patches)
 - **Parts:** ARM9 CPU interpreter (`cpu.cpp`, `arm_interpreter.cpp`, `thumb_interpreter.cpp`, `coproc.cpp`); memory and MMU (`mem.c`, `mmu.c`); NAND flash, saving it, and creating flash images (`flash.cpp`); peripherals (`misc.c`, `interrupt.c`, `lcd.c`, `keypad.cpp`, `serial.c`, `des.c`, `sha256.c`); USB and file transfer (`usb.c`, `usblink.c`, `usblink_queue.cpp`, and on the CX II `usb_cx2.cpp`, `usblink_cx2.cpp`); CX II hardware (`cx2.cpp`); the event scheduler (`schedule.c`); snapshots (`*_suspend`, `*_resume`); the web OS layer `os/os-emscripten.c`.
@@ -75,9 +75,9 @@ What `<nspire-emu>` is made of, how the parts talk to each other, and what we st
 - **The model is not a setting:** `flash.cpp` reads `product`, `features` and `asic_user_flags` from the flash image's manufacturing data. CX means `product >= 0x0F0`, CX II `product >= 0x1C0`.
 - **To research:**
   - [ ] Where the interpreter spends its time, once it runs.
-  - [ ] CX II gaps: Firebird's TODO lists the LCD's "Magic VRAM" and the PMU bits; there are also black-screen freezes and touchpad and file-transfer reports.
-  - [ ] Where the emulated real-time clock gets its time (the judge may check the date and time).
-  - [ ] Whether sleep, auto power-off, the battery level and Press-to-Test (with its LED) are emulated.
+  - [ ] CX II gaps (only if we ever switch to a CX II): Firebird's TODO lists the LCD's "Magic VRAM" and the PMU bits; there are also black-screen freezes and touchpad and file-transfer reports.
+  - [x] Where the emulated real-time clock gets its time (the judge may check the date and time). Answer: the PC's clock plus an offset the OS sets.
+  - [x] Whether sleep, auto power-off, the battery level and Press-to-Test (with its LED) are emulated. Answer: idle and "off" are cheap waits on the CX; the battery reads a fixed voltage; the LED registers exist but nothing shows them.
 
 ### 5. Storage (IndexedDB; shared)
 - **Keeps:** the TI files, so they are chosen once; the calculator's flash changes, because a document saved on the real calculator survives switching it off, so here it must survive a page reload; snapshots, for an instant start.

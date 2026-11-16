@@ -29,6 +29,7 @@ The pipeline (what comes next, in three lanes) and the phases are in `PLAN.md`. 
 - `emscripten/main.cpp` runs a fixed 1,000-iteration `step()` per frame through `emscripten_set_main_loop_arg`. It replaces the throttle event with a no-op, so there is no pacing and no speed %. `paintLCD` only calls `lcd_cx_draw_frame`. There is no key or touchpad input, and it relies on globals (`Module`, `initLCD`, `fileLoad`).
 - `core/emu.cpp`: under `__EMSCRIPTEN__`, `emu_longjmp` is `assert(false)`, so `error()` → `return_to_loop()` crashes instead of resetting. Use real setjmp/longjmp (WebAssembly exception handling).
 - `core/emu.h` defines `NO_TRANSLATION` on anything that isn't x86 or ARM, so WebAssembly gets the interpreter only (no JIT).
+- Calling `emu_loop()` once per slice is wrong: its preamble's `sched_update_next_event(0)` resets the scheduler's position in the second, and `addr_cache_flush()` costs speed. Plan: split it into `emu_loop_begin()` + `emu_loop_run()`, pace in the worker, and patch `debugger()` so `error()` can't hang the worker (`research/3-4-core-loop.md`).
 
 ## Core functions the bridge will expose
 - `emu_start()` with `path_boot1` / `path_flash`.
@@ -55,9 +56,9 @@ The pipeline (what comes next, in three lanes) and the phases are in `PLAN.md`. 
 - Installed: Python 3.14, Git 2.53, MinGW `mingw32-make`. Not installed: Node.js, CMake, Ninja, `make`.
 - PowerShell aliases win over functions (`rd` is Remove-Item), so give helper functions Verb-Noun names.
 
-## Status (2026-11-15)
+## Status (2026-11-16)
 - Plan agreed and moved to E:. Big picture done: `COMPONENTS.md` splits the work into 10 components and 4 contracts, with research questions and a research order.
 - Component 6 researched (`research/6-ti-files.md`): no TI files from anyone, so the team dumps its own calculator. The team has a TI-Nspire CX CAS on OS 3.2.3.1233 (2026-11-16), older than anything Ndless supports. Next for the team: install Computer Link, back up the documents, update once to TI's current CX CAS OS 4.5.5.79 (on Ndless's list), then read the boot1 version. Computer Link works (2026-11-16). Blocker: the battery is worn (the calculator only runs on the charger) and the OS installer refuses a low battery, so charge it fully on a wall charger, or reseat or replace the battery, before the update.
-- Next (Pipeline in `PLAN.md`, lane A): unzip the source into `firebird/` and start git (no download), then research [3] + [4], the core loop and its callbacks. Lane C (the team's calculator details) waits on the user; nothing else needs it before the first boot.
+- Lane A (2026-11-16): source unzipped into `firebird/` and git started (`a2c69d0` import, `8b213fc` docs). Research [3] + [4] done (`research/3-4-core-loop.md`). Next: research [2], the worker host. Lane C (the OS update, then the dump) waits on the calculator's battery; nothing else needs it before the first boot.
 - **Phase 0 has not started.** It needs the user's go-ahead for the 714 MB Emscripten download.
 - Still to ask the teacher: which model and OS version the judge uses (part of the spec).

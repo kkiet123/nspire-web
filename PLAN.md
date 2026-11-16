@@ -33,9 +33,9 @@ How the work flows: big picture first; then, for each component, research it (fi
 
 **Lane A: engine (Claude)**
 1. Done: research [6], TI files (`research/6-ti-files.md`).
-2. **Next:** Phase 0, step 1: unzip the source into `firebird/` and start git. No download.
-3. Research [3] + [4]: the core loop and its callbacks. Settles contracts C and D.
-4. Research [2]: the worker host (slices, pacing, frames). Gives the draft of contract B.
+2. Done: Phase 0, step 1: source unzipped into `firebird/`, git started (2026-11-16).
+3. Done: research [3] + [4], the core loop and its callbacks (`research/3-4-core-loop.md`). Contracts C and D are drafted there.
+4. **Next:** research [2]: the worker host (slices, pacing, frames). Gives the draft of contract B.
 5. Agree contract B with the team. This unblocks lane B's build.
 6. Research [7]: Emscripten 7.0.0 flags.
 7. Phase 0, step 2: install emsdk. **Gate:** the user's OK for the 714 MB download.
@@ -64,7 +64,7 @@ How the work flows: big picture first; then, for each component, research it (fi
 ## Phases
 
 ### Phase 0: Setup (Claude)
-- [ ] Unzip `E:\user\Desktop\firebird-master.zip` into `firebird\` and start a git repository, with `roms/` ignored.
+- [x] Unzip `E:\user\Desktop\firebird-master.zip` into `firebird\` and start a git repository, with `roms/` ignored.
 - [ ] Install emsdk in `E:\emsdk`, pinned to Emscripten 7.0.0 (714 MB download, needs the user's OK first).
 - **Done when:** a test program compiles to WebAssembly.
 
