@@ -1,0 +1,5 @@
+# Keep text files LF in the repository and the working tree, so upstream
+# Firebird files stay as they came in the source zip.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
