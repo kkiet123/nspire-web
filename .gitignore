@@ -17,6 +17,7 @@ nspire-backup/
 # Third-party installers and tools kept here for convenience
 Ndless-*.zip
 TI-Nspire Computer Link/
+tools/
 
 # Build output
 web/dist/
