@@ -80,11 +80,15 @@ const ICON = {
   flag: svg(12, 13, '<path d="M2.5 12.5V1.5h8l-2 2.8 2 2.8h-8"/>'),
   ret: svg(14, 10, '<path d="M12.5 1v5.5H2"/><path d="M4.8 3.6 2 6.5l2.8 2.9"/>'),
   space: svg(18, 8, '<path d="M2 1.5v5h14v-5" stroke-width="2.2" stroke-linecap="butt" stroke-linejoin="miter"/>'),
-  // The TI logo, simplified: Texas with "ti" in it. Replace it with TI's own
-  // artwork when the team has it.
+  // The TI logo, simplified: Texas, and on it a bold white i, slanted like
+  // the imaginary unit, laid over a t, so that only the two ends of the t's
+  // crossbar show beside the i. Replace it with TI's own artwork when the
+  // team has it.
   ti: svg(18, 17, fill('<path d="M.4 7.3 4.9 7 5 .5h3.8v2.8c1.2.6 2.4.9 3.8 1.1l3.8.4v2.3l.5 3.3-1.5.7-1.6 1-1.7 1.2.3 2.8-3-2.3-1.8-2.9-3 .6-1.5-.9z"/>')
-    + '<path d="M7.4 5.2v5.6c0 .6.4.9 1 .8M6 7h2.8M10.6 7.4v4.2" stroke="#1d1c1b" stroke-width="1.3"/>'
-    + '<circle cx="10.6" cy="5.4" r=".8" fill="#1d1c1b" stroke="none"/>'),
+    + '<g stroke="#1d1c1b" stroke-width="3.1"><path d="M10.9 5.6 8.6 11.6q-.4 1.1.9.5"/><path d="M8 7.6h4.3" stroke-width="2.1"/></g>'
+    + '<circle cx="11.5" cy="3.7" r="1.55" fill="#1d1c1b" stroke="none"/>'
+    + '<g stroke="#f7f7f4"><path d="M8.1 7.6h4.1" stroke-width="1.1" stroke-linecap="butt"/><path d="M10.9 5.6 8.6 11.6q-.4 1.1.9.5" stroke-width="2.1"/></g>'
+    + '<circle cx="11.5" cy="3.7" r="1" fill="#f7f7f4" stroke="none"/>'),
   // ctrl functions, printed above the keys
   undo: svg(11, 9, '<path d="M3.5 3h4a3 3 0 0 1 0 6H5"/><path d="M5.5 1 3.2 3l2.3 2"/>'),
   context: svg(13, 10, '<path d="M1 1h7.5v8H1z"/><path d="M2.7 3.3h4M2.7 5.3h4M2.7 7.3h2.5"/><path d="M9 5v4.3l1.1-1 .9 1.6.8-.4-.9-1.6h1.5z" fill="currentColor" stroke-width=".5"/>'),
@@ -172,11 +176,11 @@ function keypad() {
   letters.forEach((row, r) => row.forEach((k, c) => {
     if (!k) return;
     const [name, label, spoken] = typeof k === 'string' ? ['a' + k.toLowerCase(), k] : k;
-    // Letter keys are small squares, about 60 % of the column pitch, as on
-    // the calculator; space spans two columns.
-    const width = name === 'space' ? 63.5 : 24;
+    // Letter keys are small squares (19 units), centred in their columns,
+    // as on the calculator; space spans two columns.
+    const width = name === 'space' ? 58.5 : 19;
     const style = ['X', 'Y', 'Z'].includes(label) ? 'letter grey' : 'letter';   // grey on the calculator
-    keys.push([name, label, 43 + c * 39.5, 704 + r * 31, width, 24, style, '', spoken]);
+    keys.push([name, label, 45.5 + c * 39.5, 706.5 + r * 31, width, 19, style, '', spoken]);
   }));
   return keys;
 }
@@ -204,15 +208,20 @@ const STYLE = `
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 -1px 0 #000, 0 0 0 1px #121110; }
 /* "TI-nspire CX" and "CAS": a thin TI-, a calligraphic n, silver "spire" and "CAS". */
 /* One baseline for the model name and "CAS". */
-.brand { position: absolute; left: 0; right: 0; top: 18px; display: flex; align-items: baseline; white-space: nowrap; }
-.model { display: flex; align-items: baseline; margin-left: 134px; }
+/* Laid over the screen's width: the model name centred, "CAS" ending at
+   the screen's right edge, both on one baseline. */
+.brand { position: absolute; left: 52px; right: 52px; top: 16px; display: grid; grid-template-columns: 1fr auto 1fr;
+  align-items: baseline; white-space: nowrap; }
+.model { grid-column: 2; display: flex; align-items: baseline; }
 .model .ti { font: 300 19px/1 "Segoe UI", system-ui, sans-serif; letter-spacing: 1px; color: #efeeea; }
 .model .n { font: italic 400 34px/1 Garamond, "Palatino Linotype", Georgia, serif; margin-left: -3px; }
 .model .spire { font: italic 700 25px/1 "Segoe UI", system-ui, sans-serif; letter-spacing: -.2px; margin: 0 4px 0 -6px; }
 .model .cx { font: italic 700 19px/1 "Segoe UI", system-ui, sans-serif; color: #f5f5f2; letter-spacing: .6px; }
-.silver { padding: 0 3px; background: linear-gradient(#ffffff, #e7e8ea 38%, #a9adb3 56%, #eceef0 78%, #c4c8cc);
+/* Silver text: the gradient is clipped to the glyphs, so the box must reach
+   below the baseline, or the tail of the p disappears. */
+.silver { padding: 0 3px .32em; background: linear-gradient(#ffffff, #e9eaec 28%, #aeb2b8 44%, #eceef0 60%, #c6cace 74%, #9a9ea4);
   -webkit-background-clip: text; background-clip: text; color: transparent; }
-.cas { margin: 0 55px 0 auto; font: 700 23px/1 "Segoe UI", system-ui, sans-serif; letter-spacing: .4px; }
+.cas { grid-column: 3; justify-self: end; margin-right: -3.4px; font: 700 23px/1 "Segoe UI", system-ui, sans-serif; letter-spacing: .4px; }
 .maker { position: absolute; left: 0; right: 0; top: 830px; display: flex; align-items: center; justify-content: center; gap: 5px; color: #c4c7c1; }
 .maker span { font: 700 14.5px/1 Constantia, "Palatino Linotype", Georgia, serif; font-variant: small-caps; letter-spacing: .5px; }
 .bezel { position: absolute; left: 49px; top: 59px; width: 326px; height: 246px; border-radius: 2px; background: #000; box-shadow: 0 0 0 1px #1f1f1f; }
@@ -233,7 +242,7 @@ canvas { position: absolute; left: 52px; top: 62px; width: 320px; height: 240px;
 .key.pairL { border-radius: 6px 2px 2px 6px; }
 .key.pairR { border-radius: 2px 6px 6px 2px; }
 /* Letters: square keys with a big, round, bold face. */
-.key.letter { font-family: "Nspire Keys", "Segoe UI", sans-serif; font-weight: 700; font-size: 11.5px; letter-spacing: 0; border-radius: 5px; }
+.key.letter { font-family: "Nspire Keys", "Segoe UI", sans-serif; font-weight: 700; font-size: 11.5px; letter-spacing: 0; border-radius: 4px; }
 .key .ee { font-size: 9.5px; }
 .key.ctrl { background: linear-gradient(#f7edbd, #e1cf8f 75%); color: #3b3423; }
 .key.down, .key.latched { transform: translateY(1.5px); filter: brightness(1.3);
