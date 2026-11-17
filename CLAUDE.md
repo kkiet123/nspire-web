@@ -6,7 +6,7 @@ The pipeline (what comes next, in three lanes) and the phases are in `PLAN.md`. 
 
 ## Working with the user
 - The user writes in English or Vietnamese. Reply in the language of their latest message.
-- Split of work: Claude does the toolchain and C++ side (Phases 0–2). The team writes the web component (Phase 3) and runs the side-by-side tests (Phase 5), so guide and review there instead of writing it all. Speed (Phase 4) is shared.
+- Split of work: Claude does the toolchain and C++ side (Phases 0–2). The team was to write the web component (Phase 3), but on 2026-11-17 the user asked Claude to build it; the team tests it and runs the side-by-side tests (Phase 5). Speed (Phase 4) is shared.
 - Ask before any large download, stating the file, source and size.
 - Work order the user chose: big picture first, then research one component at a time and write the findings in `research/`, then build it.
 
@@ -15,9 +15,10 @@ The pipeline (what comes next, in three lanes) and the phases are in `PLAN.md`. 
 - Emscripten through emsdk in `E:\emsdk`, pinned to **7.0.0** (Windows package `wasm-binaries.zip`, 714 MB, from storage.googleapis.com).
 - Plain JavaScript, no framework or bundler. No SharedArrayBuffer, so `python -m http.server` can serve it. WebAssembly does not load from `file://`.
 - The emulator runs in a Web Worker. The page only draws frames and sends input.
-- `web/build.py` replaces the old `emscripten/Makefile` (no `make` on this PC). Build: `python web/build.py` (flags and findings: `research/2-7-first-web-build.md`). Dev run: serve the project root (`python -m http.server 8000 --bind 127.0.0.1`, or the `nspire-web` preview in `.claude/launch.json`), open `http://localhost:8000/web/dist/`, press "Load files from /roms (dev)". Always pass `--bind 127.0.0.1`: without it the server listens on the whole network, and anyone on the same Wi-Fi could download `roms/` (boot1, OS), `nspire-backup/` and `.git/`.
+- `web/build.py` replaces the old `emscripten/Makefile` (no `make` on this PC). Build: `python web/build.py` (flags and findings: `research/2-7-first-web-build.md`). Dev run: serve the project root (`python -m http.server 8000 --bind 127.0.0.1`, or the `nspire-web` preview in `.claude/launch.json`), open `http://localhost:8000/web/dist/demo.html` (the calculator; the first run in a browser installs the OS: press I), or `/web/dist/` for the test page ("Load files from /roms (dev)"). Always pass `--bind 127.0.0.1`: without it the server listens on the whole network, and anyone on the same Wi-Fi could download `roms/` (boot1, OS), `nspire-backup/` and `.git/`.
 - The core never waits (`turbo_mode` on inside it); `web/worker.js` paces it in 10 ms emulated steps. Key changes wait in a per-key queue: a release until a keypad scan has seen the key (`nw_key_seen`), a second press until the release has lasted 80 ms, so double taps count twice (test: `node tests/worker-keys.js`). Page files carry a build id (`?v=`) against stale browser caches.
 - The component talks to the worker only through contract B, version 1 (`web/contract-b.md`). `web/fake-worker.js` speaks it with a test pattern, so the component can be built without TI files or the wasm build (test page: `index.html?fake`). New optional fields keep version 1; renaming or removing a message raises it.
+- The component is `web/nspire-emu.js` (ES module, Shadow DOM) with the demo `web/demo.html`. Its layout is in units where the screen is 320 × 240 and the body 424 × 860, measured from a photo of a CX CAS. The body zooms by k / devicePixelRatio with the largest whole k that fits the window, so the screen stays sharp. No TI logo or product photo in the product.
 - Layout: `firebird/` (upstream source, small marked patches only), `web/` (our code), `web/dist/` (build output), `roms/` (TI files, git-ignored), `tests/`.
 
 ## Source
@@ -66,5 +67,6 @@ The pipeline (what comes next, in three lanes) and the phases are in `PLAN.md`. 
 - LCD off and turbo fixed (2026-11-17): the screen shows "LCD off" when the OS sets the contrast to 0 (`hdq1w.lcd_contrast`, as the desktop app), and turbo only speeds up busy periods (`nw_run` stops at the first idle 10 ms step), so idle time no longer races into auto power-off.
 - Known gaps: CPU-bound speed is unsettled: 55–65 % of a real CX in the test browser, but the same build runs the OS install at 128–216 % (median 149 %) in Node 24 (also V8), and the real `worker.js` holds 100 % through it there; re-measure in a plain Chrome window with DevTools closed before tuning.
 - **Contract B, version 1, agreed (2026-11-17):** `web/contract-b.md`. With `web/fake-worker.js` the team can build `<nspire-emu>` (Phase 3) now. Their guide: `research/1-nspire-emu.md` (all 70 keys as data, input rules, a draft of contract A, a starter tested against the fake worker).
+- **The component works (2026-11-17, built by Claude at the user's request):** `web/nspire-emu.js` and `web/demo.html`: body, screen, 70 keys, touchpad, PC keyboard, dropped files, resume. Tested in the browser: resume, the first-run install (Press I), keys, `2*3`, a touchpad click, the right-click latch. The user tests it next in their own Chrome.
 - Next: speed (Phase 4): measure in a plain Chrome window with DevTools closed before tuning. Then the open storage items (persistent storage, export for the demo laptop).
 - Still to ask the teacher: which model and OS version the judge uses (part of the spec).

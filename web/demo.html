@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nspire-web</title>
+<style>
+  :root { color-scheme: light dark; --bg: #e7e5df; --fg: #1f1f1f; --muted: #5d5d5d; --card: #f6f5f2; --line: #d1cec6; --accent: #2f6fd6; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #161719; --fg: #e8e8e8; --muted: #a2a2a2; --card: #222326; --line: #36383c; --accent: #7aa7ff; }
+  }
+  html, body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.5 system-ui, "Segoe UI", sans-serif; }
+  main { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 28px; padding: 4px 16px 16px; }
+  aside { flex: 0 1 310px; padding-top: 6px; }
+  h1 { font-size: 20px; margin: 0 0 2px; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 18px 0 6px; }
+  p { margin: 4px 0; }
+  .stat { display: flex; gap: 16px; color: var(--muted); }
+  .stat b { color: var(--fg); font-variant-numeric: tabular-nums; }
+  #status { min-height: 3em; margin: 6px 0 10px; }
+  .buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+  button { font: inherit; padding: 5px 11px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); color: var(--fg); cursor: pointer; }
+  button:hover { border-color: var(--muted); }
+  button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+  table { border-collapse: collapse; font-size: 13px; }
+  td { padding: 1px 12px 1px 0; vertical-align: top; }
+  td:first-child { white-space: nowrap; }
+  kbd { font: 12px ui-monospace, Consolas, monospace; padding: 0 4px; border: 1px solid var(--line); border-radius: 4px; background: var(--card); }
+  code { font: 12px ui-monospace, Consolas, monospace; }
+</style>
+<script type="module" src="nspire-emu.js?v=__BUILD__"></script>
+</head>
+<body>
+<main>
+  <!-- Development demo: the TI files come from /roms/ on this computer (never
+       commit or publish them). Users of the product drop their own files. -->
+  <nspire-emu id="calc" remember
+    boot1="../../roms/boot1.img.tns" boot2="../../roms/boot2.img.tns" manuf="../../roms/manuf.img.tns"
+    diags="../../roms/diags.img.tns" os="../../roms/TI-NspireCXCAS-4.5.5.79.tcc"></nspire-emu>
+  <script>
+    // ?fake: the test-pattern worker (no TI files or emulator needed).
+    if (new URLSearchParams(location.search).has('fake')) document.getElementById('calc').setAttribute('worker', 'fake-worker.js');
+  </script>
+  <aside>
+    <h1>nspire-web</h1>
+    <div class="stat"><span>Speed <b id="speed">–</b></span><span id="saved"></span></div>
+    <p id="status">Starting…</p>
+    <div class="buttons">
+      <button id="turbo" aria-pressed="false" title="Full speed while the calculator computes">Turbo</button>
+      <button id="send" title="Send .tns documents or an OS file to the calculator">Send file…</button>
+      <button id="save" title="Save the calculator in this browser now">Save state</button>
+      <button id="reset" title="Like the reset hole on the back">Reset</button>
+      <button id="forget" title="Delete what this browser saved">Forget saved</button>
+      <input id="file" type="file" multiple hidden>
+    </div>
+
+    <h2>First run in this browser</h2>
+    <p>The calculator installs its OS. When it shows <i>Press 'I' to install</i>, press <kbd>I</kbd>. Installing takes one to two minutes; then answer the setup screens. After that it starts where you left off.</p>
+
+    <h2>Keyboard (click the calculator first)</h2>
+    <table>
+      <tr><td><kbd>←</kbd> <kbd>↑</kbd> <kbd>→</kbd> <kbd>↓</kbd></td><td>touchpad arrows</td></tr>
+      <tr><td><kbd>Enter</kbd>, <kbd>Alt</kbd>+<kbd>Enter</kbd></td><td>enter, ↵</td></tr>
+      <tr><td><kbd>Esc</kbd> <kbd>Tab</kbd> <kbd>Backspace</kbd></td><td>esc, tab, del</td></tr>
+      <tr><td><kbd>Home</kbd> <kbd>PgUp</kbd> <kbd>PgDn</kbd> <kbd>End</kbd></td><td>on, doc, menu, scratchpad</td></tr>
+      <tr><td><kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>Insert</kbd></td><td>ctrl, shift, var</td></tr>
+      <tr><td>A–Z 0–9 + − * / ^ ( ) = . ,</td><td>the same keys</td></tr>
+      <tr><td><kbd>`</kbd> <kbd>[</kbd> <kbd>]</kbd> <kbd>@</kbd> <kbd>\</kbd></td><td>(−), eˣ, 10ˣ, x², trig</td></tr>
+      <tr><td><kbd>;</kbd> <kbd>'</kbd> <kbd>&lt;</kbd> <kbd>|</kbd> <kbd>?</kbd> <kbd>&gt;</kbd></td><td>templates, catalog, EE, π, ?!, flag</td></tr>
+    </table>
+
+    <h2>Mouse and touch</h2>
+    <p>Click or touch the keys. A right click holds a key down until the next right click. On the touchpad: drag to move the pointer, tap to click, tap an edge for an arrow, hold still to grab. Drop <code>.tns</code> files on the calculator to send them.</p>
+  </aside>
+</main>
+<script type="module">
+  const calc = document.getElementById('calc');
+  const $ = (id) => document.getElementById(id);
+  const say = (text) => { $('status').textContent = text; };
+
+  calc.addEventListener('speed', (e) => { $('speed').textContent = Math.round(e.detail.value * 100) + ' %'; });
+  calc.addEventListener('status', (e) => say(e.detail.text));
+  calc.addEventListener('loaded', () => say('Files loaded, starting…'));
+  calc.addEventListener('started', (e) => say(e.detail.resumed ? 'Resumed where you left off.' : 'Running.'));
+  calc.addEventListener('lcd', (e) => say(e.detail.on ? 'Running.' : 'The screen is off: press on.'));
+  calc.addEventListener('progress', (e) => {
+    const { what, value } = e.detail;
+    say(value < 0 ? 'The transfer failed.' : `Sending ${what === 'os' ? 'the OS' : 'a file'}: ${value} %`);
+  });
+  calc.addEventListener('storage', (e) => {
+    const s = e.detail;
+    $('saved').textContent = s.exists ? `Saved ${new Date(s.savedAt).toLocaleTimeString()}` : 'Nothing saved yet';
+  });
+  calc.addEventListener('error', (e) => say('Error: ' + e.detail.message));
+
+  $('turbo').onclick = () => {
+    calc.turbo = !calc.turbo;
+    $('turbo').setAttribute('aria-pressed', String(calc.turbo));
+  };
+  $('send').onclick = () => $('file').click();
+  $('file').onchange = async () => {
+    await calc.sendFiles($('file').files);
+    $('file').value = '';
+  };
+  $('save').onclick = () => { calc.save(); say('Saving…'); };
+  $('reset').onclick = () => calc.reset();
+  $('forget').onclick = () => {
+    if (confirm('Delete the calculator saved in this browser? Documents on it are lost; the next start installs the OS again.')) calc.forget();
+  };
+</script>
+</body>
+</html>

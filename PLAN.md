@@ -44,7 +44,7 @@ How the work flows: big picture first; then, for each component, research it (fi
 **Lane B: web component (team; Claude guides)**
 1. Done (2026-11-17, Claude for the team): research [1], the guide for Phase 3 (`research/1-nspire-emu.md`): key data, input rules, a draft of contract A and a starter tested against the fake worker.
 2. Done (2026-11-17): contract B, version 1 (`web/contract-b.md`).
-3. **Can start now:** Phase 3, build `<nspire-emu>` against `web/fake-worker.js`, following `research/1-nspire-emu.md` ("Start here").
+3. Done (2026-11-17, built by Claude at the user's request): Phase 3, `web/nspire-emu.js` and `web/demo.html`. The team tests it.
 4. Research [9]: the test checklist for each app (`tests/checklist.md`). Any time.
 
 **Lane C: TI files (team)**
@@ -80,12 +80,12 @@ How the work flows: big picture first; then, for each component, research it (fi
 - [x] Load them in the browser and draw the screen (2026-11-17: home screen, setup and Calculate work; `research/2-7-first-web-build.md`).
 - **Done when:** TI's home screen appears and you can move around with the keyboard.
 
-### Phase 3: The web component (team, Claude guides; can start now against `web/fake-worker.js`; guide: `research/1-nspire-emu.md`)
-- [ ] Custom element with Shadow DOM.
-- [ ] Calculator body and keypad: on-screen keys that react on `pointerdown`, PC keyboard mapping (ported from Firebird's `keymap.h` and `qml/Keypad.qml`), touchpad.
-- [ ] The 320×240 screen, scaled up sharply (`image-rendering: pixelated`).
-- [ ] API: attributes `boot1` and `flash`; methods `start()`, `reset()`, `sendFile()`; events `ready`, `error`, `speed`.
-- **Done when:** putting `<nspire-emu>` into a blank HTML page gives a working calculator.
+### Phase 3: The web component (built by Claude at the user's request, 2026-11-17; guide: `research/1-nspire-emu.md`)
+- [x] Custom element with Shadow DOM.
+- [x] Calculator body and keypad: on-screen keys that react on `pointerdown`, PC keyboard mapping (ported from Firebird's `keymap.h` and `qml/Keypad.qml`), touchpad.
+- [x] The 320×240 screen, scaled up sharply (`image-rendering: pixelated`).
+- [x] API: attributes `boot1` and `flash`; methods `start()`, `reset()`, `sendFile()`; events `ready`, `error`, `speed` (and more: `research/1-nspire-emu.md`).
+- **Done when:** putting `<nspire-emu>` into a blank HTML page gives a working calculator. Done: `web/demo.html` (2026-11-17); the team's own tests are next.
 
 ### Phase 4: Speed and smoothness (together)
 - [ ] Run at the real calculator's speed by default, so the cursor blink, key repeat and clock match. Add a turbo switch for heavy work.

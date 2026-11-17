@@ -2,6 +2,8 @@
 
 2026-11-17. Component [1] in `COMPONENTS.md`, written for the team (lane B): the team builds the component, Claude answers questions and reviews. Read from Firebird's `qml/Keypad.qml`, `qml/NButton.qml`, `qml/NDualButton.qml`, `qml/Touchpad.qml`, `keymap.h`, `qtkeypadbridge.cpp` and `core/keypad.cpp`, and from our `web/contract-b.md`.
 
+**Update, 2026-11-17:** at the user's request Claude built the component from this guide: `web/nspire-emu.js`, with the demo `web/demo.html` (`http://localhost:8000/web/dist/demo.html` after `python web/build.py`). It implements the proposed API below, plus a `manual` attribute (start only when the page calls `load()` and `start()`), `sendFiles(files)` (documents and OS files while running, the TI files before) and an `lcd` event with `on: true` when the screen comes back. Its layout is measured from a photo of a CX CAS (Wikimedia Commons), in units where the screen is 320 × 240. The starter below stays as the smallest version.
+
 ## What to build
 
 `<nspire-emu>` is the calculator people see and touch: one custom element with a Shadow DOM. Phase 3 is done when a blank HTML page that loads `nspire-emu.js` and contains `<nspire-emu>` gives a working calculator.

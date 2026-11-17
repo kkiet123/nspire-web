@@ -27,7 +27,7 @@ What `<nspire-emu>` is made of, how the parts talk to each other, and what we st
 
 | # | Component | Job | Owner | Phase |
 |---|---|---|---|---|
-| 1 | `<nspire-emu>` | What people see and touch, and the public API | Team | 3 |
+| 1 | `<nspire-emu>` | What people see and touch, and the public API | Claude (at the user's request); team tests | 3 |
 | 2 | Worker host | Runs the emulator off the page at the right speed; input in, frames out | Claude; tuning shared | 1–2, 4 |
 | 3 | Bridge | Thin C++ layer between JavaScript and the core | Claude | 1 |
 | 4 | Emulator core | Firebird's model of the calculator hardware | Claude (small patches) | 1–2, 5 |
@@ -40,7 +40,7 @@ What `<nspire-emu>` is made of, how the parts talk to each other, and what we st
 
 ## The components
 
-### 1. `<nspire-emu>` (main thread; team)
+### 1. `<nspire-emu>` (main thread; built by Claude at the user's request)
 - **Parts:** custom element with Shadow DOM; calculator body and keypad; touchpad; PC keyboard mapping; the 320×240 screen on a canvas, scaled up sharply; loading files (boot1, flash, `.tns` documents, OS); speed and status display.
 - **Port from Firebird:** `qml/Keypad.qml` (layout, key to row and column), `qml/Touchpad.qml`, `keymap.h` and `qtkeypadbridge.cpp` (PC keys), `resources/keyimages/` (GPLv3).
 - **Guide (2026-11-17):** `research/1-nspire-emu.md`: the key data, input rules, a draft of contract A and a starter tested against the fake worker.
@@ -50,7 +50,7 @@ What `<nspire-emu>` is made of, how the parts talk to each other, and what we st
   - [x] PC keys: `KeyboardEvent.code` or `.key`; Vietnamese input methods (Unikey, Telex) getting in the way; ignoring auto-repeat (the calculator repeats keys by itself); releasing every key when the page loses focus (Firebird's TODO has this for the touchpad's arrow keys). Answer: symbols by `key`, the rest by `code`, release by `code`; Unikey still to test on the demo laptop.
   - [x] Pointer input: holding two keys at once, multi-touch, `pointercancel`. Answer: pointer capture, one pointer per key, `touch-action: none`, Firebird's right-click latch.
   - [x] Sharp scaling: whole-number zoom and `devicePixelRatio`. Answer: CSS width 320 × k / devicePixelRatio, recomputed when devicePixelRatio changes (`matchMedia`).
-- **Can start now** against `web/fake-worker.js`, which speaks contract B (`web/contract-b.md`) with a test pattern: no TI files or wasm build needed. The test page runs it with `index.html?fake`.
+- **Built (2026-11-17):** `web/nspire-emu.js` with the demo `web/demo.html` (open `http://localhost:8000/web/dist/demo.html`; `?fake` runs it on `web/fake-worker.js`).
 
 ### 2. Worker host (Web Worker, JavaScript; Claude, tuning shared)
 - **Parts:** loading the wasm; the message protocol with [1]; the run loop (run a slice, give the thread back, repeat); pacing to real speed, and turbo; the frame pipe; virtual files (Emscripten's in-memory file system) holding boot1 and the flash image; a queue for file transfers; errors and reset.

@@ -44,7 +44,7 @@ CXX_SOURCES = [CORE / f for f in (
 )] + [WEB / 'bridge.cpp']
 
 # Copied next to firebird.js so web/dist/ is a complete page.
-PAGE_FILES = ['index.html', 'main.js', 'worker.js', 'fake-worker.js']
+PAGE_FILES = ['index.html', 'main.js', 'worker.js', 'fake-worker.js', 'nspire-emu.js', 'demo.html']
 
 EXPORTS = [
     '_nw_create_flash', '_nw_start', '_nw_run', '_nw_last_busy_ticks', '_nw_core_wants_fast',
