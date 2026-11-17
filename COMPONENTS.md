@@ -54,9 +54,11 @@ What `<nspire-emu>` is made of, how the parts talk to each other, and what we st
 ### 2. Worker host (Web Worker, JavaScript; Claude, tuning shared)
 - **Parts:** loading the wasm; the message protocol with [1]; the run loop (run a slice, give the thread back, repeat); pacing to real speed, and turbo; the frame pipe; virtual files (Emscripten's in-memory file system) holding boot1 and the flash image; a queue for file transfers; errors and reset.
 - **To research:**
-  - [ ] Slice length: input delay against throughput (4 ms? 16 ms?), and how to give the thread back without the browser's timer delay (`setTimeout` or `MessageChannel`).
-  - [ ] Pacing: how Firebird's throttle (`throttle_timer_wait`, `cycle_count_delta`, the scheduler in `schedule.c`) maps onto the wall clock in a worker. The core side is in `research/3-4-core-loop.md`: run the core with `turbo_mode` on and pace in the worker by 10 ms emulated steps.
-  - [ ] Frames: post a buffer on each change, or draw from the worker into an `OffscreenCanvas` that [1] hands over? Convert RGB565 to RGBA in C++ (as the old port's `paintLCD` did) or in JavaScript?
+  - [x] Slice length: input delay against throughput (4 ms? 16 ms?), and how to give the thread back without the browser's timer delay (`setTimeout` or `MessageChannel`). Answer: at most 8 ms of real time per slice; `MessageChannel` for zero-delay turns (`research/2-7-first-web-build.md`).
+  - [x] Pacing: how Firebird's throttle (`throttle_timer_wait`, `cycle_count_delta`, the scheduler in `schedule.c`) maps onto the wall clock in a worker. Answer: the core runs with `turbo_mode` on; the worker runs the emulated time it owes in 10 ms steps and drops debt beyond 200 ms. Measured: about 100 % at idle and boot.
+  - [x] Frames: post a buffer on each change, or draw from the worker into an `OffscreenCanvas` that [1] hands over? Convert RGB565 to RGBA in C++ (as the old port's `paintLCD` did) or in JavaScript? Answer for now: RGBA in C, a transferred buffer only after an LCD refresh with a changed picture. `OffscreenCanvas` not tried yet.
+  - [x] Quick taps: hold a release until a keypad scan has seen the key (`nw_key_seen`), at least 80 ms and at most 1 s of emulated time.
+  - [ ] "LCD off": show it when the LCD stops refreshing, instead of keeping the last picture.
   - [x] Knowing when the LCD changed: hook the LCD controller instead of redrawing at 60 Hz (on Firebird's TODO). Answer: the bridge provides `gif_new_frame()`, which `lcd_event` calls on every refresh.
   - [ ] What browsers do to a worker in a hidden tab, and keeping the emulated clock right afterwards.
 
@@ -104,10 +106,10 @@ What `<nspire-emu>` is made of, how the parts talk to each other, and what we st
 - **Parts:** emsdk 7.0.0 in `E:\emsdk`, `web/build.py`, output in `web/dist/`.
 - **Sources:** all of `core/` except the JIT, plus `os/os-emscripten.c` and `web/bridge.cpp`. `headless/Makefile` has the current list; the old `emscripten/Makefile` misses `keypad.cpp`, `cx2.cpp`, `usb_cx2.cpp` and `usblink_cx2.cpp`.
 - **To research (for Emscripten 7.0.0):**
-  - [ ] Flags for wasm exceptions and setjmp/longjmp, and which browsers support them.
-  - [ ] `-O3` with link-time optimisation; the zlib port; memory size (fixed or growing; the old port used 512 MB); worker-only output; which runtime helpers to export (file system, calling C).
+  - [x] Flags for wasm exceptions and setjmp/longjmp, and which browsers support them. Answer: `-fwasm-exceptions -sSUPPORT_LONGJMP=wasm` (works in Chromium; other browsers still to check).
+  - [x] `-O3` with link-time optimisation; the zlib port; memory size (fixed or growing; the old port used 512 MB); worker-only output; which runtime helpers to export (file system, calling C). Answer: `-O3`, zlib port, 256 MB growing to 1 GB, `ENVIRONMENT=worker`, exports `FS`, `ccall`, `HEAPU8`. Link-time optimisation still to try.
   - [ ] A debug build (no optimisation, assertions, memory checks) and stepping through the C++ in Chrome DevTools.
-  - [ ] Build time and the size of the `.wasm`.
+  - [x] Build time and the size of the `.wasm`. Answer: 0.22 MB wasm and 75 KB JS; the first build also compiles Emscripten's system libraries (a few minutes), later links take seconds.
 
 ### 8. Speed and smoothness (shared)
 - **Targets:** real speed by default, so the cursor blink, key repeat and clock match; turbo on request; the page stays smooth during heavy work; a quick start.

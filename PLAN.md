@@ -35,12 +35,9 @@ How the work flows: big picture first; then, for each component, research it (fi
 1. Done: research [6], TI files (`research/6-ti-files.md`).
 2. Done: Phase 0, step 1: source unzipped into `firebird/`, git started (2026-11-16).
 3. Done: research [3] + [4], the core loop and its callbacks (`research/3-4-core-loop.md`). Contracts C and D are drafted there.
-4. **Next:** research [2]: the worker host (slices, pacing, frames). Gives the draft of contract B.
-5. Agree contract B with the team. This unblocks lane B's build.
-6. Research [7]: Emscripten 7.0.0 flags.
-7. Phase 0, step 2: install emsdk. **Gate:** the user's OK for the 714 MB download.
-8. Phase 1: `web/build.py`, core patches, `web/bridge.cpp`.
-9. Build the worker host.
+4. Done (2026-11-17, by building, at the user's request): research [2] and [7], emsdk 7.0.0, Phase 1 (`web/build.py`, core patches, `web/bridge.cpp`) and the worker host. Findings: `research/2-7-first-web-build.md`.
+5. **Next:** agree contract B with the team (the draft is the message list in `web/worker.js`). This unblocks lane B's build.
+6. **Next, in parallel:** research and build [5] storage (keep the installed flash and snapshots), then the open items in `research/2-7-first-web-build.md` (LCD off, turbo, speed).
 
 **Lane B: web component (team; Claude guides)**
 1. Research [1]: keypad, touchpad and PC keys from Firebird's QML. Can start now.
@@ -52,33 +49,33 @@ How the work flows: big picture first; then, for each component, research it (fi
 1. Done: a TI-Nspire CX CAS on OS 3.2.3.1233, older than anything Ndless supports.
 2. Done (2026-11-16): Computer Link installed, documents backed up, OS updated once to 4.5.5.79. No updates after this.
 3. Done (2026-11-16): Ndless, then PolyDumper; boot1, boot2, diags and manuf are in `roms/` with the 4.5.5.79 OS file (`research/6-ti-files.md`).
-4. Optional: boot the set in the desktop Firebird first, to catch a bad dump before Phase 2.
+4. Skipped at the user's request: the desktop check. The set boots in our web build instead.
 
 **Together, once the lanes meet**
-1. Phase 2: first boot in the browser. Needs lane A, step 9 and lane C, step 3.
+1. Done (2026-11-17): Phase 2, first boot in the browser.
 2. Research [5] storage and [8] speed, then build and tune (Phase 4).
 3. Phase 5: side-by-side tests and fixes.
 4. Phase 6: hand-in ([10]).
 
-**Gates:** the 714 MB download (lane A, step 7); our calculators' model and OS version (lane C); the judge's model (ask the teacher; it decides CX or CX II).
+**Gates:** the judge's model (ask the teacher; it decides CX or CX II). The download and the calculator gates are passed.
 
 ## Phases
 
 ### Phase 0: Setup (Claude)
 - [x] Unzip `E:\user\Desktop\firebird-master.zip` into `firebird\` and start a git repository, with `roms/` ignored.
-- [ ] Install emsdk in `E:\emsdk`, pinned to Emscripten 7.0.0 (714 MB download, needs the user's OK first).
+- [x] Install emsdk in `E:\emsdk`, pinned to Emscripten 7.0.0 (714 MB download, needs the user's OK first).
 - **Done when:** a test program compiles to WebAssembly.
 
 ### Phase 1: Compile the emulator to WebAssembly (Claude, team reviews)
-- [ ] `web/build.py` covering all current core files (including `keypad.cpp`, `cx2.cpp`, `usb_cx2.cpp`, `usblink_cx2.cpp`), current Emscripten options, `-O3` and link-time optimisation.
-- [ ] Fix the old port: real setjmp/longjmp so errors reset instead of crashing, no fixed 1,000-loop main loop, screen output for every model.
-- [ ] `web/bridge.cpp` with the functions JavaScript calls: start, run for N milliseconds, key, touchpad, screen, send file or OS, save and restore a snapshot, speed.
+- [x] `web/build.py` covering all current core files (including `keypad.cpp`, `cx2.cpp`, `usb_cx2.cpp`, `usblink_cx2.cpp`), current Emscripten options and `-O3`. Link-time optimisation: still to try.
+- [x] Fix the old port: real setjmp/longjmp so errors reset instead of crashing, no fixed 1,000-loop main loop. Screen output: CX models only so far.
+- [x] `web/bridge.cpp` with the functions JavaScript calls: start, run for N milliseconds, key, touchpad, screen, send file or OS, speed. Still to add: save and restore a snapshot.
 - **Done when:** the build has no errors and a bare test page loads it and shows "waiting for boot1/flash".
 
 ### Phase 2: First boot in the browser (Claude, needs the TI files)
-- [ ] Team: dump boot1 and boot2 from our own calculator and download the OS from TI's site (`research/6-ti-files.md`).
-- [ ] Check the files (in our build, or first in the desktop Firebird).
-- [ ] Load them in the browser and draw the screen.
+- [x] Team: dump boot1 and boot2 from our own calculator and download the OS from TI's site (`research/6-ti-files.md`).
+- [x] Check the files (in our build).
+- [x] Load them in the browser and draw the screen (2026-11-17: home screen, setup and Calculate work; `research/2-7-first-web-build.md`).
 - **Done when:** TI's home screen appears and you can move around with the keyboard.
 
 ### Phase 3: The web component (team, Claude guides; can start now with a fake test-pattern screen)

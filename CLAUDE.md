@@ -15,7 +15,8 @@ The pipeline (what comes next, in three lanes) and the phases are in `PLAN.md`. 
 - Emscripten through emsdk in `E:\emsdk`, pinned to **7.0.0** (Windows package `wasm-binaries.zip`, 714 MB, from storage.googleapis.com).
 - Plain JavaScript, no framework or bundler. No SharedArrayBuffer, so `python -m http.server` can serve it. WebAssembly does not load from `file://`.
 - The emulator runs in a Web Worker. The page only draws frames and sends input.
-- `web/build.py` replaces the old `emscripten/Makefile` (no `make` on this PC).
+- `web/build.py` replaces the old `emscripten/Makefile` (no `make` on this PC). Build: `python web/build.py` (flags and findings: `research/2-7-first-web-build.md`). Dev run: serve the project root (`python -m http.server 8000`, or the `nspire-web` preview in `.claude/launch.json`), open `http://localhost:8000/web/dist/`, press "Load files from /roms (dev)".
+- The core never waits (`turbo_mode` on inside it); `web/worker.js` paces it in 10 ms emulated steps. Key releases wait until a keypad scan has seen the key (`nw_key_seen`). Page files carry a build id (`?v=`) against stale browser caches.
 - Layout: `firebird/` (upstream source, small marked patches only), `web/` (our code), `web/dist/` (build output), `roms/` (TI files, git-ignored), `tests/`.
 
 ## Source
@@ -24,7 +25,7 @@ The pipeline (what comes next, in three lanes) and the phases are in `PLAN.md`. 
 - Includes the January 2026 CX II touchpad fix: `core/flash.cpp` reads the manuf features big-endian.
 - `core/` is about 21,800 lines in 77 files.
 
-## Problems in the old web port (`emscripten/`)
+## Problems in the old web port (`emscripten/`; all fixed in `web/` on 2026-11-17, kept as history)
 - `Makefile` lists `core/keypad.c` (now `keypad.cpp`) and lacks `cx2.cpp`, `usb_cx2.cpp`, `usblink_cx2.cpp`. It uses removed options (`--llvm-lto`, `EXTRA_EXPORTED_RUNTIME_METHODS`) and old `.bc` outputs.
 - `emscripten/main.cpp` runs a fixed 1,000-iteration `step()` per frame through `emscripten_set_main_loop_arg`. It replaces the throttle event with a no-op, so there is no pacing and no speed %. `paintLCD` only calls `lcd_cx_draw_frame`. There is no key or touchpad input, and it relies on globals (`Module`, `initLCD`, `fileLoad`).
 - `core/emu.cpp`: under `__EMSCRIPTEN__`, `emu_longjmp` is `assert(false)`, so `error()` → `return_to_loop()` crashes instead of resetting. Use real setjmp/longjmp (WebAssembly exception handling).
@@ -53,12 +54,13 @@ The pipeline (what comes next, in three lanes) and the phases are in `PLAN.md`. 
 
 ## Environment (Windows 11)
 - Shells: PowerShell 5.1 and Git Bash.
-- Installed: Python 3.14, Git 2.53, MinGW `mingw32-make`. Not installed: Node.js, CMake, Ninja, `make`.
+- Installed: Python 3.14, Git 2.53, MinGW `mingw32-make`; emsdk with Emscripten 7.0.0 in `E:\emsdk` (its own Node 24.19.0 and Python 3.13.3). Not on PATH: Node.js, CMake, Ninja, `make`.
+- The Downloads folder is `E:\user\user`.
 - PowerShell aliases win over functions (`rd` is Remove-Item), so give helper functions Verb-Noun names.
 
-## Status (2026-11-16)
-- Plan agreed and moved to E:. Big picture done: `COMPONENTS.md` splits the work into 10 components and 4 contracts, with research questions and a research order.
-- Component 6 researched (`research/6-ti-files.md`): no TI files from anyone, so the team dumps its own calculator. The team has a TI-Nspire CX CAS on OS 3.2.3.1233 (2026-11-16), older than anything Ndless supports. Done 2026-11-16: Computer Link works, documents backed up, OS updated to 4.5.5.79 (the battery is worn but held enough charge after a long charge). Ndless r2023 and PolyDumper 5.0 ran; the dumps are in `roms/` (CX CAS, HW A; boot2 partition holds Boot1.5 4.5.0.14; diags 3.2.0.7; hashes in `research/6-ti-files.md`). Open: check that Firebird boots this set (desktop Firebird v1.6, 34 MB download, ask first; or at Phase 2).
-- Lane A (2026-11-16): source unzipped into `firebird/` and git started (`a2c69d0` import, `8b213fc` docs). Research [3] + [4] done (`research/3-4-core-loop.md`). Next: research [2], the worker host. Lane C (the OS update, then the dump) waits on the calculator's battery; nothing else needs it before the first boot.
-- **Phase 0 has not started.** It needs the user's go-ahead for the 714 MB Emscripten download.
+## Status (2026-11-17)
+- Big picture (`COMPONENTS.md`) and research [3], [4], [6] done. TI files: dumped from the team's CX CAS (HW A, OS 4.5.5.79) into `roms/` (`research/6-ti-files.md`).
+- **First boot in the browser works (Phases 0–2 done).** The web build boots boot1 → Boot1.5 → boot2 4.5.0.14 → CX CAS OS 4.5.5.79 to the home screen; setup, Calculate, keys, arrows and the touchpad click work; about 100 % speed at idle. With the OS preloaded into the flash image, Boot1.5 asks "Press 'I' to install" (that was the desktop "stall"). Findings: `research/2-7-first-web-build.md`.
+- Known gaps: nothing persists (every reload reinstalls the OS, about 90 s); the screen keeps the last picture when the LCD goes off; turbo races idle time into auto power-off; CPU-bound speed is about 55–65 % of a real CX.
+- Next: agree contract B with the team (draft: the messages in `web/worker.js`); component [5] storage (save the installed flash and snapshots); then LCD off, turbo and speed (Phase 4).
 - Still to ask the teacher: which model and OS version the judge uses (part of the spec).
