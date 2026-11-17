@@ -105,12 +105,13 @@ const ICON = {
   contrastUp: svg(14, 9, '<circle cx="4.6" cy="4.5" r="3.6"/><path d="M4.6.9a3.6 3.6 0 0 0 0 7.2z" fill="currentColor"/>' + fill('<path d="M10 2.2v4.6l3-2.3z"/>')),
   contrastDown: svg(14, 9, fill('<path d="M4 2.2v4.6L1 4.5z"/>') + '<circle cx="9.4" cy="4.5" r="3.6"/><path d="M9.4.9a3.6 3.6 0 0 1 0 7.2z" fill="currentColor"/>'),
   // The touchpad and the ctrl + arrow functions around it
-  // grab: a hand seen from the side in an open C grip, as the user showed:
-  // the fingers together on top and the thumb below, both pointing left,
-  // the gap between them open to the left, the back of the hand and the
-  // wrist on the right.
-  hand: svg(15, 11, '<path d="M1.4 4.1C1.6 3.1 2.6 2.6 4 2.4l5.2-.8c1.8-.2 3.4.6 4.6 1.8v5.5c-2.2.9-5.8 1-8.8.9L4.2 9.6c-.8-.1-1-1-.3-1.3l2.7-.6c1-.2 1.3-1.4.5-1.8L2.9 5.3c-1-.1-1.6-.4-1.5-1.2z"/>'
-    + '<path d="M4.2 3.9 8.8 3.3"/>'),
+  // grab: a hand seen from the side gripping a round C that opens to the
+  // left (the fingers curl over the top, the thumb under the bottom), two
+  // finger lines along the top, and a solid wrist on the right; drawn from
+  // the team's close-up of the touchpad.
+  hand: svg(15, 12, '<path d="M3 6C1.4 5.6 1.2 3.4 2.6 2.2 4.2.8 7.6.9 10.2 1.9c.9.4 1.6.9 2 1.5V10c-2.6.9-5.8 1.2-8 .4-1.6-.6-2.2-1.7-1.6-2.6h2c.8 1 3 1 3.8-.4.6-1.2-.4-2.8-2-2.8-1 0-1.8.4-2.2 1z"/>'
+    + '<path d="M3.8 3.4c1.9-1.3 5.3-1.1 7.6.9M5.8 4.6c1.8-.7 4 0 5.4 1.6"/>'
+    + fill('<rect x="12.2" y="3" width="2.4" height="7.4" rx=".4"/>')),
   click: svg(13, 12, '<path d="M4.2 1v1.8M1 4.2h1.8M1.8 1.8 3 3M6.6 1.8 5.5 3M1.8 6.6 3 5.5"/>' + fill('<path d="M5.6 5.2 11.8 7.6l-2.5.9 1.9 2.3-1 .8-1.8-2.3-1.5 2.2z"/>')),
   up: svg(7, 5, fill('<path d="M3.5.5 6.5 4.5h-6z"/>')),
   down: svg(7, 5, fill('<path d="M3.5 4.5 6.5.5h-6z"/>')),
