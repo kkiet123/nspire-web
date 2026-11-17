@@ -4,6 +4,15 @@
 
 **Update, 2026-11-17:** at the user's request Claude built the component from this guide: `web/nspire-emu.js`, with the demo `web/demo.html` (`http://localhost:8000/web/dist/demo.html` after `python web/build.py`). It implements the proposed API below, plus a `manual` attribute (start only when the page calls `load()` and `start()`), `sendFiles(files)` (documents and OS files while running, the TI files before) and an `lcd` event with `on: true` when the screen comes back. Its layout is measured from a photo of a CX CAS (Wikimedia Commons), in units where the screen is 320 × 240. The starter below stays as the smallest version.
 
+## Look fixes to do (from the team's photo, 2026-11-17, paused)
+
+The team photographed its own CX CAS (`web/build/ref/real.webp`, git-ignored, local only). Colours below are corrected for the photo's warm light, with the white key text as the reference.
+- **Names (the user's decision: the team works with TI):** "TI-nspire CX" centred at the top ("TI-" thin, "nspire" italic with a script-like n, "CX" light cyan), "CAS" bold white on the right, "Texas Instruments" in small caps at the bottom. No TI emblem drawn (use TI's own file if they give one). Move the "nspire-web · Firebird" credit from the body to the demo page.
+- **Colours:** ctrl key pale yellow (about `#f0e3a4`) with dark text; ctrl labels pale cyan (about `#b5e2ee`); number keys and X, Y, Z mid grey; touchpad ring metallic champagne; glossy black glass from the top down to the touchpad band; dark grey lower panel; lighter grey side rails.
+- **Fonts:** key labels in a bold rounded face: Arial Rounded MT Bold is installed here. Declare it with `@font-face { src: local(...) }` in the document, since `@font-face` is ignored inside a shadow root. "nspire" in a bold italic (try Candara), "Texas Instruments" in small caps (Candara).
+- **Key symbols:** pad: three slanted lines and a calculator; esc label: an undo arrow; doc ▾; menu label: a page with a cursor; shift: an outline ⇧; del with ← below; trig with ▸ below; ^ as a chevron; labels |≠≥▸, ? in a circle, ⁿ√x, √ with a bar, ":=", "∞β°", '"□"', □ over □ (fraction), ◐▸ and ◂◐ (contrast); templates: |□|{⁝; space: ⎵. Each pair (= trig, ^ x², eˣ 10ˣ, ( ), templates catalog, × ÷, + −) is one rocker key with a groove.
+- **Touchpad:** a rounded square in the middle with a grabbing hand (cyan, ctrl) over a click cursor with rays (white); around the pad: above, a curved arrow with tiles; below, a page with a curved arrow; left, a page with ◀; right, a page with ▶.
+
 ## What to build
 
 `<nspire-emu>` is the calculator people see and touch: one custom element with a Shadow DOM. Phase 3 is done when a blank HTML page that loads `nspire-emu.js` and contains `<nspire-emu>` gives a working calculator.
