@@ -50,6 +50,7 @@ EXPORTS = [
     '_nw_create_flash', '_nw_start', '_nw_run', '_nw_core_wants_fast',
     '_nw_key', '_nw_key_seen', '_nw_touch', '_nw_arrow', '_nw_frame_rgba', '_nw_frame_update',
     '_nw_send_os', '_nw_send_file', '_nw_save_flash', '_nw_reset',
+    '_nw_flash_block_size', '_nw_flash_dirty_blocks', '_nw_suspend',
     '_nw_debug_info', '_malloc', '_free',
 ]
 RUNTIME_EXPORTS = ['FS', 'ccall', 'HEAPU8']
@@ -185,10 +186,13 @@ def main():
         if path.exists():
             build_id.update(path.read_bytes())
     build_id = build_id.hexdigest()[:12]
+    # Snapshots hold raw core state, so they only fit the wasm that wrote them.
+    core_id = hashlib.sha256(wasm.read_bytes()).hexdigest()[:12]
     for name in PAGE_FILES:
         src = WEB / name
         if src.exists():
-            text = src.read_text(encoding='utf-8').replace('__BUILD__', build_id)
+            text = src.read_text(encoding='utf-8')
+            text = text.replace('__BUILD__', build_id).replace('__CORE__', core_id)
             (DIST / name).write_text(text, encoding='utf-8', newline='\n')
 
     print(f'Done: {out_js.relative_to(ROOT)} and firebird.wasm '

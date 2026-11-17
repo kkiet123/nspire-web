@@ -57,7 +57,7 @@ What `<nspire-emu>` is made of, how the parts talk to each other, and what we st
   - [x] Slice length: input delay against throughput (4 ms? 16 ms?), and how to give the thread back without the browser's timer delay (`setTimeout` or `MessageChannel`). Answer: at most 8 ms of real time per slice; `MessageChannel` for zero-delay turns (`research/2-7-first-web-build.md`).
   - [x] Pacing: how Firebird's throttle (`throttle_timer_wait`, `cycle_count_delta`, the scheduler in `schedule.c`) maps onto the wall clock in a worker. Answer: the core runs with `turbo_mode` on; the worker runs the emulated time it owes in 10 ms steps and drops debt beyond 200 ms. Measured: about 100 % at idle and boot.
   - [x] Frames: post a buffer on each change, or draw from the worker into an `OffscreenCanvas` that [1] hands over? Convert RGB565 to RGBA in C++ (as the old port's `paintLCD` did) or in JavaScript? Answer for now: RGBA in C, a transferred buffer only after an LCD refresh with a changed picture. `OffscreenCanvas` not tried yet.
-  - [x] Quick taps: hold a release until a keypad scan has seen the key (`nw_key_seen`), at least 80 ms and at most 1 s of emulated time.
+  - [x] Quick taps: hold a release until a keypad scan has seen the key (`nw_key_seen`), at least 80 ms and at most 1 s of emulated time; hold a second press of the same key until its release has lasted 80 ms, so double taps count twice (`tests/worker-keys.js`).
   - [ ] "LCD off": show it when the LCD stops refreshing, instead of keeping the last picture.
   - [x] Knowing when the LCD changed: hook the LCD controller instead of redrawing at 60 Hz (on Firebird's TODO). Answer: the bridge provides `gif_new_frame()`, which `lcd_event` calls on every refresh.
   - [ ] What browsers do to a worker in a hidden tab, and keeping the emulated clock right afterwards.
@@ -84,11 +84,13 @@ What `<nspire-emu>` is made of, how the parts talk to each other, and what we st
 ### 5. Storage (IndexedDB; shared)
 - **Keeps:** the TI files, so they are chosen once; the calculator's flash changes, because a document saved on the real calculator survives switching it off, so here it must survive a page reload; snapshots, for an instant start.
 - **Known:** `os-emscripten.c` maps `flash.img` copy-on-write, so changes stay in memory only. `flash.cpp` has `flash_save_changes()` and `flash_save_as()`.
+- **Built (2026-11-17):** IndexedDB in the worker; the flash image stored block by block, snapshots that resume in about 1.3 s. Findings: `research/5-storage.md`.
 - **To research:**
-  - [ ] What `flash_save_changes()` writes (the whole image or the changed blocks), and how to store only the changes.
-  - [ ] When to save: after a file transfer or a document save, on a timer, on `visibilitychange` or `pagehide`.
-  - [ ] Sizes of the flash image and a snapshot, compression (Firebird already uses zlib), browser storage limits.
-  - [ ] A snapshot belongs to one boot1 and flash (its header stores their paths) and to one `SNAPSHOT_VER`: when to throw it away.
+  - [x] What `flash_save_changes()` writes (the whole image or the changed blocks), and how to store only the changes. Answer: only the changed blocks; we store the image block by block and overwrite changed blocks.
+  - [x] When to save: after a file transfer or a document save, on a timer, on `visibilitychange` or `pagehide`. Answer: changed flash blocks every 10 s; flash and a snapshot when the page is hidden or on request (closing leaves no time for the snapshot).
+  - [x] Sizes of the flash image and a snapshot, compression (Firebird already uses zlib), browser storage limits. Answer: 132 MiB image (Chrome refuses single values over about 127 MiB, hence blocks), about 10 MB gzip snapshot.
+  - [x] A snapshot belongs to one boot1 and flash (its header stores their paths) and to one `SNAPSHOT_VER`: when to throw it away. Answer: after any later flash save, when the core build changes, or when the setup changes.
+  - [ ] Persistent storage not granted in the test browser; export and import of a saved setup for the demo laptop.
 
 ### 6. TI files and model (team dumps its own calculator; Claude researches and checks)
 - **Nobody supplies them** (2026-11-15). Route: boot1 and boot2 from our own calculator with Ndless and PolyDumper, the OS from education.ti.com. Findings: `research/6-ti-files.md`.
@@ -127,7 +129,7 @@ What `<nspire-emu>` is made of, how the parts talk to each other, and what we st
   - [ ] How to compare side by side: same steps on both, screenshots or video, timings.
 
 ### 10. Hand-in and license (team and Claude)
-- README: run it locally with one command (`python -m http.server`), credits, which parts the team wrote.
+- README: run it locally with one command (`python -m http.server --bind 127.0.0.1`, so only this computer can reach it), credits, which parts the team wrote.
 - GPLv3: the source goes with any build given to others. Key images are GPLv3, icons LGPLv3.
 - TI files stay out of git unless TI allows otherwise in writing.
 - Rehearse on the demo laptop, offline, in the browser the judge will use.

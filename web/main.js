@@ -16,18 +16,38 @@ const setStatus = (text) => { $('status').textContent = text; };
 
 let osData = null;         // kept for "Send OS over USB"
 let turbo = false;
+let started = false;
 
 worker.onmessage = (event) => {
   const m = event.data;
   switch (m.type) {
-    case 'ready': setStatus('ready: load the files'); break;
+    case 'ready':
+      setStatus('ready: load the files');
+      worker.postMessage({ type: 'probe' });       // anything saved in this browser?
+      break;
+    case 'saved':
+      if (m.exists) {
+        $('resume').disabled = started;
+        $('saved').textContent = `Saved ${new Date(m.savedAt).toLocaleString()}: ` +
+          (m.snapshot ? 'with a snapshot (resumes where you left off)' : 'flash only (boots the saved OS)') +
+          `, ${m.blocks} flash blocks stored`;
+        if (!started) setStatus('a saved setup exists: press "Resume saved"');
+      } else {
+        $('saved').textContent = m.error ? 'Storage unavailable: ' + m.error : 'Nothing saved yet';
+      }
+      break;
     case 'frame': ctx.putImageData(new ImageData(new Uint8ClampedArray(m.rgba), 320, 240), 0, 0); break;
     case 'speed': $('speed').textContent = Math.round(m.value * 100) + ' %'; break;
     case 'status': setStatus(m.text); log('[status] ' + m.text); break;
     case 'log': log(m.text); break;
     case 'usblink': log('[usb] ' + (m.connected ? 'connected' : 'disconnected')); break;
     case 'progress': setStatus(`sending ${m.what}: ${m.value} %`); break;
-    case 'started': setStatus('running'); break;
+    case 'started':
+      started = true;
+      $('resume').disabled = true;
+      $('start').disabled = true;
+      setStatus('running');
+      break;
     case 'error': setStatus('error'); log('[error] ' + m.message); break;
   }
 };
@@ -57,6 +77,13 @@ function useFiles(files) {
     log(`[page] building a flash image: product 0x${model.product.toString(16)}, features 0x${model.features.toString(16)}, OS ${withOS ? 'preloaded' : 'not included'}`);
     worker.postMessage({ type: 'createFlash', product: model.product, features: model.features, manuf: !!files.manuf, diags: !!files.diags, os: withOS });
   }
+  if ($('remember').checked) {
+    worker.postMessage({ type: 'store' });         // replaces any earlier saved setup
+    // Ask the browser not to evict our storage when the disk gets full.
+    if (navigator.storage && navigator.storage.persist) {
+      navigator.storage.persist().then((ok) => log('[storage] persistent storage ' + (ok ? 'granted' : 'not granted')));
+    }
+  }
   $('start').disabled = false;
   setStatus('files loaded: press Start');
 }
@@ -68,7 +95,8 @@ async function fetchFile(url) {
 }
 
 // Development shortcut: when the project root is served (python -m http.server
-// in E:\nspire-web), the page sits at /web/dist/ and the dumps at /roms/.
+// 8000 --bind 127.0.0.1 in E:\nspire-web; the bind keeps /roms/ off the
+// network), the page sits at /web/dist/ and the dumps at /roms/.
 $('devload').onclick = async () => {
   try {
     const base = '../../roms/';
@@ -101,6 +129,19 @@ $('sendos').onclick = () => {
 };
 $('reset').onclick = () => worker.postMessage({ type: 'reset' });
 $('saveflash').onclick = () => worker.postMessage({ type: 'saveFlash' });
+$('resume').onclick = () => { worker.postMessage({ type: 'restore' }); canvas.focus(); };
+$('savestate').onclick = () => worker.postMessage({ type: 'saveState' });
+$('forget').onclick = () => {
+  worker.postMessage({ type: 'forget' });
+  worker.postMessage({ type: 'probe' });
+};
+
+// Save the whole state when the page is hidden or closed, so the next visit
+// resumes where this one stopped. (The worker also saves changed flash blocks
+// every 10 s while running.)
+const saveState = () => { if (started) worker.postMessage({ type: 'saveState' }); };
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveState(); });
+window.addEventListener('pagehide', saveState);
 
 // ---- Keys --------------------------------------------------------------
 // Keypad matrix from firebird/keymap.h: index = row * 11 + col.

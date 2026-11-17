@@ -304,6 +304,30 @@ EMSCRIPTEN_KEEPALIVE void nw_send_file(const char *local, const char *remote)
 
 EMSCRIPTEN_KEEPALIVE int nw_save_flash() { return flash_save_changes() ? 1 : 0; }
 
+// Storage (component 5). The worker keeps the flash image in IndexedDB as a
+// base image plus the blocks saved since; these tell it which blocks to copy
+// out of /flash.img after nw_save_flash() has written them there.
+EMSCRIPTEN_KEEPALIVE int nw_flash_block_size()
+{
+    return static_cast<int>(nand.metrics.page_size << nand.metrics.log2_pages_per_block);
+}
+
+// Indices of the NAND blocks changed since the last save. Call before
+// nw_save_flash(), which clears the marks.
+EMSCRIPTEN_KEEPALIVE int nw_flash_dirty_blocks(uint16_t *out, int max)
+{
+    int num_blocks = static_cast<int>(nand.metrics.num_pages >> nand.metrics.log2_pages_per_block);
+    int n = 0;
+    for (int i = 0; i < num_blocks && i < 2048 && n < max; i++)
+        if (nand.nand_block_modified[i])
+            out[n++] = static_cast<uint16_t>(i);
+    return n;
+}
+
+// Writes the whole machine state to /snapshot.gz. It holds only the flash
+// blocks changed since the last nw_save_flash(), so it fits that flash image.
+EMSCRIPTEN_KEEPALIVE int nw_suspend() { return emu_suspend("snapshot.gz") ? 1 : 0; }
+
 EMSCRIPTEN_KEEPALIVE void nw_reset()
 {
     usblink_queue_reset();
