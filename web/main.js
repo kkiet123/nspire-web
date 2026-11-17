@@ -17,6 +17,19 @@ function log(text) {
 }
 const setStatus = (text) => { $('status').textContent = text; };
 
+// Text on the black screen: what to press before the first frame, or "LCD off".
+function screenText(lines) {
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, 320, 240);
+  ctx.fillStyle = '#999';
+  ctx.font = '12px sans-serif';
+  ctx.textAlign = 'center';
+  lines.forEach((line, i) => ctx.fillText(line, 160, 124 + (i - (lines.length - 1) / 2) * 18));
+}
+screenText(FAKE
+  ? ['Fake worker: a test pattern, no TI files needed.', 'Press "Load files from /roms (dev)",', 'then "Start".']
+  : ['Press "Load files from /roms (dev)"', '(or choose your own files below), then "Start".', 'Saved before? Press "Resume saved".']);
+
 let osData = null;         // kept for "Send OS over USB"
 let turbo = false;
 let started = false;
@@ -47,14 +60,7 @@ worker.onmessage = (event) => {
       }
       break;
     case 'frame': ctx.putImageData(new ImageData(new Uint8ClampedArray(m.rgba), 320, 240), 0, 0); break;
-    case 'lcd':                // the calculator turned its screen off
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0, 0, 320, 240);
-      ctx.fillStyle = '#777';
-      ctx.font = '12px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('LCD off (press ON)', 160, 124);
-      break;
+    case 'lcd': screenText(['LCD off (press ON)']); break;   // the calculator turned its screen off
     case 'speed': $('speed').textContent = Math.round(m.value * 100) + ' %'; break;
     case 'status': setStatus(m.text); log('[status] ' + m.text); break;
     case 'log': log(m.text); break;
