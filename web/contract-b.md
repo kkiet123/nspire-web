@@ -35,7 +35,7 @@ worker created ──> ready
 | `type` | Fields | Reply | What it does |
 |---|---|---|---|
 | `load` | `files`: `{ boot1, flash }` or `{ boot1, boot2, manuf?, diags?, os? }` (ArrayBuffers); `osInFlash?`; `remember?` | `loaded` | Uses a full flash image, or builds one from boot2 (+ manuf, diags). With `osInFlash` the OS goes into the new image and the calculator offers to install it on the first boot (press `I`). With `remember` the setup is stored in this browser (replacing any earlier one). CX and CX CAS only; for a CX II, pass a full flash image. |
-| `start` | `saved?` | `started` | Starts the loaded files; with `saved: true` the setup stored in this browser instead, resuming the saved snapshot when it fits, otherwise booting the saved flash. |
+| `start` | `saved?` | `started` | Starts the loaded files; send it after `loaded` (with `remember`, the worker is still storing the files until then). With `saved: true` it starts the setup stored in this browser instead, resuming the saved snapshot when it fits, otherwise booting the saved flash. |
 | `key` | `row`, `col`, `down` | none | A key of the keypad matrix (table below). Send `down: false` for every `down: true`. |
 | `arrow` | `dir` (0 up, 1 down, 2 left, 3 right), `down` | none | The touchpad's arrow edges. |
 | `touch` | `x`, `y` (0 to 1, top left is 0, 0), `contact`, `down` | none | The touchpad: `contact` while a finger touches, `down` while it is pressed (a click). |

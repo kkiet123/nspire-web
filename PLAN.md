@@ -42,9 +42,9 @@ How the work flows: big picture first; then, for each component, research it (fi
 8. **Next:** speed (measure in a plain Chrome window first), then the open items in `research/5-storage.md`.
 
 **Lane B: web component (team; Claude guides)**
-1. Research [1]: keypad, touchpad and PC keys from Firebird's QML. Can start now.
+1. Done (2026-11-17, Claude for the team): research [1], the guide for Phase 3 (`research/1-nspire-emu.md`): key data, input rules, a draft of contract A and a starter tested against the fake worker.
 2. Done (2026-11-17): contract B, version 1 (`web/contract-b.md`).
-3. **Can start now:** Phase 3, build `<nspire-emu>` against `web/fake-worker.js` (the test page shows it with `index.html?fake`).
+3. **Can start now:** Phase 3, build `<nspire-emu>` against `web/fake-worker.js`, following `research/1-nspire-emu.md` ("Start here").
 4. Research [9]: the test checklist for each app (`tests/checklist.md`). Any time.
 
 **Lane C: TI files (team)**
@@ -80,7 +80,7 @@ How the work flows: big picture first; then, for each component, research it (fi
 - [x] Load them in the browser and draw the screen (2026-11-17: home screen, setup and Calculate work; `research/2-7-first-web-build.md`).
 - **Done when:** TI's home screen appears and you can move around with the keyboard.
 
-### Phase 3: The web component (team, Claude guides; can start now against `web/fake-worker.js`)
+### Phase 3: The web component (team, Claude guides; can start now against `web/fake-worker.js`; guide: `research/1-nspire-emu.md`)
 - [ ] Custom element with Shadow DOM.
 - [ ] Calculator body and keypad: on-screen keys that react on `pointerdown`, PC keyboard mapping (ported from Firebird's `keymap.h` and `qml/Keypad.qml`), touchpad.
 - [ ] The 320×240 screen, scaled up sharply (`image-rendering: pixelated`).

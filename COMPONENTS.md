@@ -43,12 +43,13 @@ What `<nspire-emu>` is made of, how the parts talk to each other, and what we st
 ### 1. `<nspire-emu>` (main thread; team)
 - **Parts:** custom element with Shadow DOM; calculator body and keypad; touchpad; PC keyboard mapping; the 320×240 screen on a canvas, scaled up sharply; loading files (boot1, flash, `.tns` documents, OS); speed and status display.
 - **Port from Firebird:** `qml/Keypad.qml` (layout, key to row and column), `qml/Touchpad.qml`, `keymap.h` and `qtkeypadbridge.cpp` (PC keys), `resources/keyimages/` (GPLv3).
+- **Guide (2026-11-17):** `research/1-nspire-emu.md`: the key data, input rules, a draft of contract A and a starter tested against the fake worker.
 - **To research:**
-  - [ ] The (row, column) of every key for `keypad_set_key(row, col, state)` (the matrix from `keymap.h` is in `web/contract-b.md`), and whether the keypad differs between CX and CX II.
-  - [ ] What `touchpad_set_state(float x, float y, bool contact, bool down)` expects, and how `Touchpad.qml` turns a drag or a click into it.
-  - [ ] PC keys: `KeyboardEvent.code` or `.key`; Vietnamese input methods (Unikey, Telex) getting in the way; ignoring auto-repeat (the calculator repeats keys by itself); releasing every key when the page loses focus (Firebird's TODO has this for the touchpad's arrow keys).
-  - [ ] Pointer input: holding two keys at once, multi-touch, `pointercancel`.
-  - [ ] Sharp scaling: whole-number zoom and `devicePixelRatio`.
+  - [x] The (row, column) of every key for `keypad_set_key(row, col, state)` (the matrix from `keymap.h` is in `web/contract-b.md`), and whether the keypad differs between CX and CX II. Answer: all 70 keys as data in the guide; Firebird has one matrix and one keypad for both.
+  - [x] What `touchpad_set_state(float x, float y, bool contact, bool down)` expects, and how `Touchpad.qml` turns a drag or a click into it. Answer: x, y from 0 to 1 from the top left; moves with `contact` move the cursor; `down` at an edge is an arrow; Firebird's 200 ms hold and 100 ms click rules.
+  - [x] PC keys: `KeyboardEvent.code` or `.key`; Vietnamese input methods (Unikey, Telex) getting in the way; ignoring auto-repeat (the calculator repeats keys by itself); releasing every key when the page loses focus (Firebird's TODO has this for the touchpad's arrow keys). Answer: symbols by `key`, the rest by `code`, release by `code`; Unikey still to test on the demo laptop.
+  - [x] Pointer input: holding two keys at once, multi-touch, `pointercancel`. Answer: pointer capture, one pointer per key, `touch-action: none`, Firebird's right-click latch.
+  - [x] Sharp scaling: whole-number zoom and `devicePixelRatio`. Answer: CSS width 320 × k / devicePixelRatio, recomputed when devicePixelRatio changes (`matchMedia`).
 - **Can start now** against `web/fake-worker.js`, which speaks contract B (`web/contract-b.md`) with a test pattern: no TI files or wasm build needed. The test page runs it with `index.html?fake`.
 
 ### 2. Worker host (Web Worker, JavaScript; Claude, tuning shared)
