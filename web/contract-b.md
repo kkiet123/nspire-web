@@ -2,7 +2,7 @@
 
 Version 1, agreed 2026-11-17. This is how `<nspire-emu>` (component [1], the team's lane B) talks to the worker that runs the emulator (component [2], `web/worker.js`). Everything the component needs from the emulator goes through these messages; it never touches the WebAssembly module.
 
-`web/fake-worker.js` speaks the same contract with a test pattern instead of the emulator, so the component can be built without TI files or the wasm build. The test page uses it with `index.html?fake`.
+`web/fake-worker.js` speaks the same contract with a test pattern instead of the emulator, so the component can be built without TI files or the wasm build. The test page uses it with `index.html?fake`. That also works straight from `web/`, without `build.py` or Emscripten: serve the project root and open `http://localhost:8000/web/index.html?fake`, so Python is all a team member needs.
 
 ## Setup
 
