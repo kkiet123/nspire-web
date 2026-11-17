@@ -58,7 +58,8 @@ What `<nspire-emu>` is made of, how the parts talk to each other, and what we st
   - [x] Pacing: how Firebird's throttle (`throttle_timer_wait`, `cycle_count_delta`, the scheduler in `schedule.c`) maps onto the wall clock in a worker. Answer: the core runs with `turbo_mode` on; the worker runs the emulated time it owes in 10 ms steps and drops debt beyond 200 ms. Measured: about 100 % at idle and boot.
   - [x] Frames: post a buffer on each change, or draw from the worker into an `OffscreenCanvas` that [1] hands over? Convert RGB565 to RGBA in C++ (as the old port's `paintLCD` did) or in JavaScript? Answer for now: RGBA in C, a transferred buffer only after an LCD refresh with a changed picture. `OffscreenCanvas` not tried yet.
   - [x] Quick taps: hold a release until a keypad scan has seen the key (`nw_key_seen`), at least 80 ms and at most 1 s of emulated time; hold a second press of the same key until its release has lasted 80 ms, so double taps count twice (`tests/worker-keys.js`).
-  - [ ] "LCD off": show it when the LCD stops refreshing, instead of keeping the last picture.
+  - [x] "LCD off": show it when the LCD stops refreshing, instead of keeping the last picture. Answer: contrast 0 (`hdq1w.lcd_contrast`), as the desktop app; the worker posts `lcd` off.
+  - [x] Turbo without racing idle time: slices stop at the first idle 10 ms step, then pacing until the CPU is busy again.
   - [x] Knowing when the LCD changed: hook the LCD controller instead of redrawing at 60 Hz (on Firebird's TODO). Answer: the bridge provides `gif_new_frame()`, which `lcd_event` calls on every refresh.
   - [ ] What browsers do to a worker in a hidden tab, and keeping the emulated clock right afterwards.
 

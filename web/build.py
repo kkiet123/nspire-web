@@ -47,7 +47,7 @@ CXX_SOURCES = [CORE / f for f in (
 PAGE_FILES = ['index.html', 'main.js', 'worker.js']
 
 EXPORTS = [
-    '_nw_create_flash', '_nw_start', '_nw_run', '_nw_core_wants_fast',
+    '_nw_create_flash', '_nw_start', '_nw_run', '_nw_last_busy_ticks', '_nw_core_wants_fast',
     '_nw_key', '_nw_key_seen', '_nw_touch', '_nw_arrow', '_nw_frame_rgba', '_nw_frame_update',
     '_nw_send_os', '_nw_send_file', '_nw_save_flash', '_nw_reset',
     '_nw_flash_block_size', '_nw_flash_dirty_blocks', '_nw_suspend',

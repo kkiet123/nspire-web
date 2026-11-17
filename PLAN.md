@@ -38,7 +38,8 @@ How the work flows: big picture first; then, for each component, research it (fi
 4. Done (2026-11-17, by building, at the user's request): research [2] and [7], emsdk 7.0.0, Phase 1 (`web/build.py`, core patches, `web/bridge.cpp`) and the worker host. Findings: `research/2-7-first-web-build.md`.
 5. **Next:** agree contract B with the team (the draft is the message list in `web/worker.js`). This unblocks lane B's build.
 6. Done (2026-11-17): research and build [5] storage: the flash image and snapshots in IndexedDB; a reload resumes in about 1.3 s (`research/5-storage.md`).
-7. **Next:** the open items in `research/2-7-first-web-build.md` (LCD off, turbo, speed) and `research/5-storage.md`.
+7. Done (2026-11-17): LCD off and idle-aware turbo (`research/2-7-first-web-build.md`, "Follow-ups").
+8. **Next:** speed (measure in a plain Chrome window first), then the open items in `research/5-storage.md`.
 
 **Lane B: web component (team; Claude guides)**
 1. Research [1]: keypad, touchpad and PC keys from Firebird's QML. Can start now.

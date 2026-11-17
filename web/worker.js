@@ -20,6 +20,10 @@ const MAX_HOLD_MS = 1000;       // ...and at most, if no keypad scan sees it (ca
 let M = null;                   // the Emscripten module
 let running = false;
 let turbo = false;
+// Turbo runs flat out only while the calculator computes. When a 10 ms step
+// finds the CPU idle, the slice stops and pacing returns until the CPU is busy
+// again, so idle time (auto power-off, cursor blink) passes at real speed.
+let turboIdle = false;
 let t0 = 0;                     // wall clock when emulated time was 0
 let virtMs = 0;                 // emulated time run so far
 let lastFrame = 0;
@@ -310,12 +314,15 @@ function step() {
     owed = MAX_DEBT_MS;
   }
 
-  const fast = turbo || M._nw_core_wants_fast() !== 0;
+  const usbFast = M._nw_core_wants_fast() !== 0;  // a USB transfer runs at full speed
+  const turboFast = turbo && !turboIdle;
+  const fast = usbFast || turboFast;
   const runMs = fast ? 100000 : Math.floor(owed / 10) * 10;
   if (runMs >= 10) {
     // Keep slices short while a key change is waiting, so it isn't held too long.
     const cap = keysWaiting() ? 20 : runMs;
-    virtMs += M._nw_run(Math.min(runMs, cap), SLICE_REAL_MS);
+    virtMs += M._nw_run(Math.min(runMs, cap), SLICE_REAL_MS, turboFast && !usbFast ? 1 : 0);
+    if (turbo) turboIdle = M._nw_last_busy_ticks() === 0;
     if (fast) t0 = performance.now() - virtMs;   // stay in step after turbo
   }
 
@@ -334,7 +341,13 @@ function step() {
 function pushFrame() {
   const now = performance.now();
   if (now - lastFrame < FRAME_MIN_GAP_MS) return;
-  if (M._nw_frame_update() !== 1) return;
+  const result = M._nw_frame_update();
+  if (result === 2) {                  // LCD off (calculator off or asleep)
+    lastFrame = now;
+    post({ type: 'lcd', on: false });
+    return;
+  }
+  if (result !== 1) return;
   lastFrame = now;
   const ptr = M._nw_frame_rgba();
   const rgba = M.HEAPU8.slice(ptr, ptr + W * H * 4);
@@ -396,6 +409,7 @@ self.onmessage = (event) => {
         break;
       case 'turbo':
         turbo = !!msg.on;
+        turboIdle = false;
         break;
       case 'sendOS':         // { data: ArrayBuffer }
         M.FS.writeFile('/send.tcc', new Uint8Array(msg.data));

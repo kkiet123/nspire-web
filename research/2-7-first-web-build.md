@@ -40,9 +40,14 @@ The objects `build.py` compiles were linked a second time with `-sENVIRONMENT=no
 - The real `worker.js` (in a `vm` context) paced the core at 97–103 % through the install, and a 60 ms tap of `I` reached boot2 ("Copying pre-installed image into RAM").
 - A throw from inside `nw_run` now stops the loop and posts an `error`; before, the loop ended silently and left a frozen screen.
 
+## Follow-ups (2026-11-17)
+- **LCD off:** the bridge now does what Firebird's desktop app does (`qtframebuffer.cpp`): the HDQ1W contrast value (`hdq1w.lcd_contrast`, a global in `misc.c`) at 0 means the screen is off. `nw_frame_update()` returns 2 once, the worker posts `{ type: 'lcd', on: false }`, and the next picture after power-on is drawn again. Tested: `ctrl` + `on` turns the screen black with "LCD off", `on` brings the home screen back.
+- **Turbo no longer races idle time.** At each 10 ms step the bridge notes whether the CPU sat in "wait for interrupt" (`cpu_events & EVENT_WAITING`). In turbo, `nw_run(…, stop_when_idle)` ends the slice at the first idle step and the worker paces at real speed until a step is busy again; USB transfers still run flat out. Tested: turbo at the idle home screen stays at 100–104 % with no auto power-off; during `factor(2^128+1)` it runs at the emulator's maximum (about 95–128 % in the test browser); holding `on` breaks the calculation ("Error: Break"), as on the real calculator.
+
 ## Still open
-- [ ] "LCD off" detection in the bridge.
-- [ ] Save and reload the flash image and snapshots ([5]).
-- [ ] Turbo that doesn't race idle time; behaviour in a hidden tab.
+- [x] "LCD off" detection in the bridge.
+- [x] Save and reload the flash image and snapshots ([5], `research/5-storage.md`).
+- [x] Turbo that doesn't race idle time.
+- [ ] Behaviour in a hidden tab: the worker keeps running, so the calculator stays on and auto power-off happens as on a real one. Pausing while hidden would save battery.
 - [ ] Speed: measure the interpreter's hot spots; try link-time optimisation.
 - [ ] Debug build; separate compile and link stamps in `build.py`.

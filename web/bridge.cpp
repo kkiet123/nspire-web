@@ -21,6 +21,7 @@
 #include "core/gif.h"
 #include "core/keypad.h"
 #include "core/lcd.h"
+#include "core/misc.h"
 #include "core/usblink.h"
 #include "core/usblink_queue.h"
 
@@ -120,12 +121,20 @@ void throttle_timer_wait(unsigned int) {}
 // One call per throttle event, that is per 10 ms of emulated time.
 static int slice_ticks_left = 0;
 static int slice_ticks_done = 0;
+static int slice_busy_ticks = 0;
+static bool slice_stop_when_idle = false;
 static double slice_deadline = 0;
 
 void gui_do_stuff(bool)
 {
+    // The CPU is idle when it sits in "wait for interrupt" (coproc.cpp sets
+    // EVENT_WAITING); then the scheduler skips straight to the next event.
+    bool idle = cpu_events & EVENT_WAITING;
+    if (!idle)
+        ++slice_busy_ticks;
     ++slice_ticks_done;
-    if (--slice_ticks_left <= 0 || emscripten_get_now() >= slice_deadline)
+    if (--slice_ticks_left <= 0 || emscripten_get_now() >= slice_deadline
+            || (slice_stop_when_idle && idle))
         emu_yield_requested = true;
 }
 
@@ -184,9 +193,10 @@ EMSCRIPTEN_KEEPALIVE int nw_start(int from_snapshot)
 }
 
 // Runs the emulator until max_virtual_ms of emulated time or max_real_ms of
-// real time is used, whichever comes first. Returns the emulated ms done
-// (a multiple of 10).
-EMSCRIPTEN_KEEPALIVE int nw_run(int max_virtual_ms, double max_real_ms)
+// real time is used, whichever comes first, or with stop_when_idle at the
+// first 10 ms step in which the CPU was idle (turbo uses that, so idle time
+// isn't raced through). Returns the emulated ms done (a multiple of 10).
+EMSCRIPTEN_KEEPALIVE int nw_run(int max_virtual_ms, double max_real_ms, int stop_when_idle)
 {
     if (exiting)
         return 0;
@@ -195,11 +205,16 @@ EMSCRIPTEN_KEEPALIVE int nw_run(int max_virtual_ms, double max_real_ms)
     if (slice_ticks_left < 1)
         slice_ticks_left = 1;
     slice_ticks_done = 0;
+    slice_busy_ticks = 0;
+    slice_stop_when_idle = stop_when_idle != 0;
     slice_deadline = emscripten_get_now() + max_real_ms;
 
     emu_loop_run();
     return slice_ticks_done * 10;
 }
+
+// How many 10 ms steps of the last nw_run() found the CPU busy.
+EMSCRIPTEN_KEEPALIVE int nw_last_busy_ticks() { return slice_busy_ticks; }
 
 EMSCRIPTEN_KEEPALIVE int nw_core_wants_fast() { return core_wants_fast ? 1 : 0; }
 
@@ -258,13 +273,27 @@ static uint16_t frame565[320 * 240];
 static uint16_t shown565[320 * 240];
 static uint8_t frame_rgba[320 * 240 * 4];
 static bool have_shown = false;
+static bool lcd_off_shown = false;
 static uint32_t refreshes_seen = 0;
 
 EMSCRIPTEN_KEEPALIVE uint8_t *nw_frame_rgba() { return frame_rgba; }
 
-// Returns 1 when frame_rgba holds a new picture, 0 otherwise.
+// Returns 1 when frame_rgba holds a new picture, 2 once when the LCD goes
+// off, 0 otherwise.
 EMSCRIPTEN_KEEPALIVE int nw_frame_update()
 {
+    // As Firebird's desktop app does (qtframebuffer.cpp): contrast 0 means the
+    // LCD is off, e.g. the calculator powered down. Otherwise the page would
+    // keep the last picture.
+    if (hdq1w.lcd_contrast == 0) {
+        if (lcd_off_shown)
+            return 0;
+        lcd_off_shown = true;
+        have_shown = false;             // draw again as soon as it comes back
+        return 2;
+    }
+    lcd_off_shown = false;
+
     if (have_shown && lcd_refreshes == refreshes_seen)
         return 0;
     refreshes_seen = lcd_refreshes;

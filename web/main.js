@@ -37,6 +37,14 @@ worker.onmessage = (event) => {
       }
       break;
     case 'frame': ctx.putImageData(new ImageData(new Uint8ClampedArray(m.rgba), 320, 240), 0, 0); break;
+    case 'lcd':                // the calculator turned its screen off
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, 320, 240);
+      ctx.fillStyle = '#777';
+      ctx.font = '12px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('LCD off (press ON)', 160, 124);
+      break;
     case 'speed': $('speed').textContent = Math.round(m.value * 100) + ' %'; break;
     case 'status': setStatus(m.text); log('[status] ' + m.text); break;
     case 'log': log(m.text); break;
