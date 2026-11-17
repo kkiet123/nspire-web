@@ -67,8 +67,10 @@ const fill = (body) => `<g fill="currentColor" stroke="none">${body}</g>`;
 const grid = (xs, ys, w, h) => ys.map((y) => xs.map((x) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx=".3"/>`).join('')).join('');
 const ICON = {
   // On the keys
-  pad: svg(20, 14, '<path d="M2 13 5.5 1M4.6 13 8.1 1M7.2 13 10.7 1"/><rect x="11.5" y="1" width="7.5" height="12" rx="1"/><path d="M13 3.4h4.5"/>'
-    + fill(grid([12.9, 14.9, 16.9], [5.6, 7.9, 10.2], 1.4, 1.2))),
+  // The scratchpad: two slashes and a calculator, all slanted the same way.
+  pad: svg(20, 14, '<g transform="matrix(1 0 -.29 1 3.8 0)"><path d="M3 1.2v11.6M5.6 1.2v11.6"/>'
+    + '<rect x="8.6" y="1" width="7" height="12" rx="1"/><path d="M10.1 3.4h4"/>'
+    + fill(grid([10, 11.9, 13.8], [5.6, 7.9, 10.2], 1.3, 1.2)) + '</g>'),
   home: svg(15, 14, '<path d="M1.5 7.2 7.5 2l6 5.2"/><path d="M3.2 5.8V13h3.4V9.4h1.8V13h3.4V5.8"/><path d="M10.6 4.6V2.1h1.5v3.8"/>'),
   shift: svg(11, 13, '<path d="M5.5 1.2 1 6.8h2.6V12h3.8V6.8H10z"/>'),
   back: svg(17, 5, '<path d="M16 2.5H2.5M5.2.5 2 2.5l3.2 2" stroke-width="1.4"/>'),
@@ -90,16 +92,23 @@ const ICON = {
     + '<g stroke="#f7f7f4"><path d="M8.1 7.6h4.1" stroke-width="1.1" stroke-linecap="butt"/><path d="M10.9 5.6 8.6 11.6q-.4 1.1.9.5" stroke-width="2.1"/></g>'
     + '<circle cx="11.5" cy="3.7" r="1" fill="#f7f7f4" stroke="none"/>'),
   // ctrl functions, printed above the keys
-  undo: svg(11, 9, '<path d="M3.5 3h4a3 3 0 0 1 0 6H5"/><path d="M5.5 1 3.2 3l2.3 2"/>'),
+  // undo: the tail starts low in the middle and curls up and out to the left.
+  undo: svg(12, 11, '<path d="M6.4 10.2c2.6-.6 4.1-2.6 3.8-4.9-.3-2.4-2.4-3.9-5-3.5l-1.5.3" stroke-width="1.5"/>' + fill('<path d="M.9 2.5 4.6.1l.4 4.7z"/>')),
   context: svg(13, 10, '<path d="M1 1h7.5v8H1z"/><path d="M2.7 3.3h4M2.7 5.3h4M2.7 7.3h2.5"/><path d="M9 5v4.3l1.1-1 .9 1.6.8-.4-.9-1.6h1.5z" fill="currentColor" stroke-width=".5"/>'),
   help: svg(10, 10, '<circle cx="5" cy="5" r="4.2"/><path d="M3.7 3.9a1.35 1.35 0 1 1 1.9 1.25c-.4.2-.6.5-.6.9v.3"/>' + fill('<circle cx="5" cy="7.7" r=".6"/>')),
   root: svg(12, 9, '<path d="M1 5.2l1.6 2.3L5.2 1.2h6"/>'),
+  // The n-th root: a big n as the index, and the radical's bar running over the x.
+  nroot: svg(17, 11, '<path d="M1.1 6.3V2.7M1.1 3.7c.5-.9 1.2-1.3 2-1.3 1.1 0 1.7.7 1.7 1.9v2"/>'
+    + '<path d="M4.4 7.5 5.6 6.8 7.3 10.2 9.6 1.6H16.2"/><path d="M10.4 4.7 14.7 10.1M14.7 4.7 10.4 10.1"/>'),
   frac: svg(6, 10, '<rect x="1.4" y=".7" width="3.2" height="3" rx=".4"/><path d="M.6 5h4.8"/><rect x="1.4" y="6.3" width="3.2" height="3" rx=".4"/>'),
   quoted: svg(13, 8, '<path d="M1.3 1.2v2M3 1.2v2M10 1.2v2M11.7 1.2v2"/><rect x="4.6" y="2" width="3.8" height="3.8" rx=".5"/>'),
   contrastUp: svg(14, 9, '<circle cx="4.6" cy="4.5" r="3.6"/><path d="M4.6.9a3.6 3.6 0 0 0 0 7.2z" fill="currentColor"/>' + fill('<path d="M10 2.2v4.6l3-2.3z"/>')),
   contrastDown: svg(14, 9, fill('<path d="M4 2.2v4.6L1 4.5z"/>') + '<circle cx="9.4" cy="4.5" r="3.6"/><path d="M9.4.9a3.6 3.6 0 0 1 0 7.2z" fill="currentColor"/>'),
   // The touchpad and the ctrl + arrow functions around it
-  hand: svg(13, 11, '<path d="M3 6.2V3.6a1 1 0 0 1 2 0v1.8M5 5V2.8a1 1 0 0 1 2 0v2.4M7 5V3.2a1 1 0 0 1 2 0V6M9 5.2a1 1 0 0 1 2 0v1.6c0 2.2-1.6 3.6-3.8 3.6H6.4C4.6 10.4 3.4 9.4 2.6 8L1.4 6a.9.9 0 0 1 1.5-1z"/>'),
+  // grab: a hand seen from the side, the thumb and index finger closed in a
+  // ring on the left, the flat back of the hand on the right.
+  hand: svg(15, 11, '<path d="M14 2.3H8C4.8 2.3 1.6 3.6 1.6 6.3c0 2.4 2 3.9 4.5 3.9h5.6V8.8H14z"/>'
+    + '<path d="M10.4 6.6H6.1c-1.2 0-2.1-.8-2.1-1.9C4 3.7 4.9 3 6 3c1.3 0 2.2.9 2.2 2.2"/>'),
   click: svg(13, 12, '<path d="M4.2 1v1.8M1 4.2h1.8M1.8 1.8 3 3M6.6 1.8 5.5 3M1.8 6.6 3 5.5"/>' + fill('<path d="M5.6 5.2 11.8 7.6l-2.5.9 1.9 2.3-1 .8-1.8-2.3-1.5 2.2z"/>')),
   up: svg(7, 5, fill('<path d="M3.5.5 6.5 4.5h-6z"/>')),
   down: svg(7, 5, fill('<path d="M3.5 4.5 6.5.5h-6z"/>')),
@@ -144,7 +153,7 @@ function keypad() {
   const sym = (s) => `<span class="sym">${s}</span>`;
   const leftPairs = [
     [['equ', sym('='), '|≠≥▸', '='], ['trig', stack('trig', '<span class="tri">▸</span>'), ICON.help, 'trig']],
-    [['pow', ICON.caret, 'ⁿ√x', 'power'], ['squ', 'x²', ICON.root]],
+    [['pow', ICON.caret, ICON.nroot, 'power'], ['squ', 'x²', ICON.root]],
     [['exp', 'eˣ', 'ln'], ['pow10', '10ˣ', 'log']],
     [['pleft', sym('('), '[ ]', '('], ['pright', sym(')'), '{ }', ')']],
   ];
@@ -226,7 +235,7 @@ const STYLE = `
 .bezel { position: absolute; left: 49px; top: 59px; width: 326px; height: 246px; border-radius: 2px; background: #000; box-shadow: 0 0 0 1px #1f1f1f; }
 canvas { position: absolute; left: 52px; top: 62px; width: 320px; height: 240px; background: #000; image-rendering: pixelated; }
 .key { position: absolute; box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: 1.5px;
-  border-radius: 6px; color: #f6f4ef; font-size: 16.5px; line-height: 1; letter-spacing: -.1px; white-space: nowrap;
+  border-radius: 6px; color: #f6f4ef; font-size: 16.5px; font-weight: 600; line-height: 1; letter-spacing: -.1px; white-space: nowrap;
   cursor: pointer; touch-action: none;
   /* Matte, not glossy: a nearly flat colour with grain, a faint top edge. */
   background: #262523;
