@@ -22,6 +22,7 @@ tools/
 # Build output
 web/dist/
 web/build/
+__pycache__/
 
 # Local tool settings and OS clutter
 .claude/settings.local.json
