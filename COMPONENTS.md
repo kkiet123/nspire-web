@@ -44,15 +44,16 @@ What `<nspire-emu>` is made of, how the parts talk to each other, and what we st
 - **Parts:** custom element with Shadow DOM; calculator body and keypad; touchpad; PC keyboard mapping; the 320×240 screen on a canvas, scaled up sharply; loading files (boot1, flash, `.tns` documents, OS); speed and status display.
 - **Port from Firebird:** `qml/Keypad.qml` (layout, key to row and column), `qml/Touchpad.qml`, `keymap.h` and `qtkeypadbridge.cpp` (PC keys), `resources/keyimages/` (GPLv3).
 - **To research:**
-  - [ ] The (row, column) of every key for `keypad_set_key(row, col, state)`, and whether the keypad differs between CX and CX II.
+  - [ ] The (row, column) of every key for `keypad_set_key(row, col, state)` (the matrix from `keymap.h` is in `web/contract-b.md`), and whether the keypad differs between CX and CX II.
   - [ ] What `touchpad_set_state(float x, float y, bool contact, bool down)` expects, and how `Touchpad.qml` turns a drag or a click into it.
   - [ ] PC keys: `KeyboardEvent.code` or `.key`; Vietnamese input methods (Unikey, Telex) getting in the way; ignoring auto-repeat (the calculator repeats keys by itself); releasing every key when the page loses focus (Firebird's TODO has this for the touchpad's arrow keys).
   - [ ] Pointer input: holding two keys at once, multi-touch, `pointercancel`.
   - [ ] Sharp scaling: whole-number zoom and `devicePixelRatio`.
-- **Can start now** against a fake worker that sends a test pattern, once contract B is agreed.
+- **Can start now** against `web/fake-worker.js`, which speaks contract B (`web/contract-b.md`) with a test pattern: no TI files or wasm build needed. The test page runs it with `index.html?fake`.
 
 ### 2. Worker host (Web Worker, JavaScript; Claude, tuning shared)
 - **Parts:** loading the wasm; the message protocol with [1]; the run loop (run a slice, give the thread back, repeat); pacing to real speed, and turbo; the frame pipe; virtual files (Emscripten's in-memory file system) holding boot1 and the flash image; a queue for file transfers; errors and reset.
+- **Contract B, version 1 (2026-11-17):** the messages in `web/contract-b.md`. `web/worker.js` speaks it, and so does `web/fake-worker.js` without the emulator.
 - **To research:**
   - [x] Slice length: input delay against throughput (4 ms? 16 ms?), and how to give the thread back without the browser's timer delay (`setTimeout` or `MessageChannel`). Answer: at most 8 ms of real time per slice; `MessageChannel` for zero-delay turns (`research/2-7-first-web-build.md`).
   - [x] Pacing: how Firebird's throttle (`throttle_timer_wait`, `cycle_count_delta`, the scheduler in `schedule.c`) maps onto the wall clock in a worker. Answer: the core runs with `turbo_mode` on; the worker runs the emulated time it owes in 10 ms steps and drops debt beyond 200 ms. Measured: about 100 % at idle and boot.
@@ -140,7 +141,7 @@ What `<nspire-emu>` is made of, how the parts talk to each other, and what we st
 | | Between | Fixes | When |
 |---|---|---|---|
 | A | page ↔ [1] | attributes, methods, events | start of Phase 3 |
-| B | [1] ↔ [2] | message names and contents, frame format | early (Pipeline, lane A step 5), so the team can build [1] against a fake worker while [2]–[4] get built |
+| B | [1] ↔ [2] | message names and contents, frame format | Version 1 agreed 2026-11-17: `web/contract-b.md`. `web/fake-worker.js` speaks it, so the team can build [1] without the emulator |
 | C | [2] ↔ [3] | exported C functions, virtual file names (`os-emscripten.c` expects `flash.img`) | Phase 1 |
 | D | [3] ↔ [4] | core API and the `gui_*` / `throttle_*` callbacks | given by Firebird |
 

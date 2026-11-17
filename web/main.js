@@ -1,11 +1,14 @@
 // nspire-web test page: a development harness for the emulator core.
-// The real <nspire-emu> component is Phase 3 (the team's lane B).
+// The real <nspire-emu> component is Phase 3 (the team's lane B). It talks to
+// the worker through contract B (web/contract-b.md), as this page does.
+// Open it with ?fake to use fake-worker.js: no TI files or wasm needed.
 'use strict';
 
 const $ = (id) => document.getElementById(id);
 const canvas = $('screen');
 const ctx = canvas.getContext('2d');
-const worker = new Worker('worker.js?v=__BUILD__');   // build.py fills in __BUILD__
+const FAKE = new URLSearchParams(location.search).has('fake');
+const worker = new Worker((FAKE ? 'fake-worker.js' : 'worker.js') + '?v=__BUILD__');   // build.py fills in __BUILD__
 
 function log(text) {
   const el = $('log');
@@ -23,9 +26,15 @@ worker.onmessage = (event) => {
   switch (m.type) {
     case 'ready':
       setStatus('ready: load the files');
-      worker.postMessage({ type: 'probe' });       // anything saved in this browser?
+      log(`[page] worker ready: contract B v${m.protocol}, build ${m.build}${FAKE ? ' (fake worker)' : ''}`);
+      worker.postMessage({ type: 'queryStorage' });  // anything saved in this browser?
       break;
-    case 'saved':
+    case 'loaded':
+      $('start').disabled = started;
+      setStatus('files loaded: press Start');
+      if (m.model) log(`[page] built a flash image for: ${m.model.name}`);
+      break;
+    case 'storage':
       if (m.exists) {
         $('resume').disabled = started;
         $('saved').textContent = `Saved ${new Date(m.savedAt).toLocaleString()}: ` +
@@ -33,6 +42,7 @@ worker.onmessage = (event) => {
           `, ${m.blocks} flash blocks stored`;
         if (!started) setStatus('a saved setup exists: press "Resume saved"');
       } else {
+        $('resume').disabled = true;
         $('saved').textContent = m.error ? 'Storage unavailable: ' + m.error : 'Nothing saved yet';
       }
       break;
@@ -54,46 +64,25 @@ worker.onmessage = (event) => {
       started = true;
       $('resume').disabled = true;
       $('start').disabled = true;
-      setStatus('running');
+      setStatus(m.resumed ? 'running (resumed where it was saved)' : 'running');
       break;
     case 'error': setStatus('error'); log('[error] ' + m.message); break;
   }
 };
 
-// The model comes from the manufacturing data: product at 0x804 (high
-// nibbles) and revision; features at 0x81C (see flash.cpp, manuf_data_804).
-function readManuf(buf) {
-  const v = new DataView(buf);
-  return { product: (v.getUint16(0x804, true) << 4) | v.getUint16(0x806, true), features: v.getUint32(0x81C, true) };
-}
-
-// files: { boot1, flash?, boot2?, manuf?, diags?, os? } as ArrayBuffers
+// files: { boot1, flash } or { boot1, boot2, manuf?, diags?, os? } as ArrayBuffers
 function useFiles(files) {
   if (!files.boot1) { setStatus('boot1 is missing'); return; }
   osData = files.os || null;
-  const toWorker = { 'boot1.img': files.boot1 };
-  if (files.flash) {
-    toWorker['flash.img'] = files.flash;
-    worker.postMessage({ type: 'files', files: toWorker });
-  } else {
-    if (!files.boot2) { setStatus('need a flash image, or boot2 to build one'); return; }
-    Object.assign(toWorker, { 'boot2.img': files.boot2, 'manuf.img': files.manuf, 'diags.img': files.diags });
-    const withOS = $('preloados').checked && !!files.os;
-    if (withOS) toWorker['os.tcc'] = files.os;
-    worker.postMessage({ type: 'files', files: toWorker });
-    const model = files.manuf ? readManuf(files.manuf) : { product: 0x0F0, features: 0x05 };
-    log(`[page] building a flash image: product 0x${model.product.toString(16)}, features 0x${model.features.toString(16)}, OS ${withOS ? 'preloaded' : 'not included'}`);
-    worker.postMessage({ type: 'createFlash', product: model.product, features: model.features, manuf: !!files.manuf, diags: !!files.diags, os: withOS });
-  }
-  if ($('remember').checked) {
-    worker.postMessage({ type: 'store' });         // replaces any earlier saved setup
+  const remember = $('remember').checked;
+  const send = files.flash ? { boot1: files.boot1, flash: files.flash }
+    : { boot1: files.boot1, boot2: files.boot2, manuf: files.manuf, diags: files.diags, os: files.os };
+  worker.postMessage({ type: 'load', files: send, osInFlash: $('preloados').checked, remember });
+  if (remember && navigator.storage && navigator.storage.persist) {
     // Ask the browser not to evict our storage when the disk gets full.
-    if (navigator.storage && navigator.storage.persist) {
-      navigator.storage.persist().then((ok) => log('[storage] persistent storage ' + (ok ? 'granted' : 'not granted')));
-    }
+    navigator.storage.persist().then((ok) => log('[storage] persistent storage ' + (ok ? 'granted' : 'not granted')));
   }
-  $('start').disabled = false;
-  setStatus('files loaded: press Start');
+  setStatus('loading the files...');
 }
 
 async function fetchFile(url) {
@@ -106,6 +95,10 @@ async function fetchFile(url) {
 // 8000 --bind 127.0.0.1 in E:\nspire-web; the bind keeps /roms/ off the
 // network), the page sits at /web/dist/ and the dumps at /roms/.
 $('devload').onclick = async () => {
+  if (FAKE) {                     // the fake worker needs no real files
+    useFiles({ boot1: new ArrayBuffer(16), boot2: new ArrayBuffer(16) });
+    return;
+  }
   try {
     const base = '../../roms/';
     const [boot1, boot2, manuf, diags, os] = await Promise.all([
@@ -136,18 +129,15 @@ $('sendos').onclick = () => {
   worker.postMessage({ type: 'sendOS', data: osData });
 };
 $('reset').onclick = () => worker.postMessage({ type: 'reset' });
-$('saveflash').onclick = () => worker.postMessage({ type: 'saveFlash' });
-$('resume').onclick = () => { worker.postMessage({ type: 'restore' }); canvas.focus(); };
-$('savestate').onclick = () => worker.postMessage({ type: 'saveState' });
-$('forget').onclick = () => {
-  worker.postMessage({ type: 'forget' });
-  worker.postMessage({ type: 'probe' });
-};
+$('saveflash').onclick = () => worker.postMessage({ type: 'save', snapshot: false });
+$('resume').onclick = () => { worker.postMessage({ type: 'start', saved: true }); canvas.focus(); };
+$('savestate').onclick = () => worker.postMessage({ type: 'save' });
+$('forget').onclick = () => worker.postMessage({ type: 'forget' });
 
 // Save the whole state when the page is hidden or closed, so the next visit
 // resumes where this one stopped. (The worker also saves changed flash blocks
 // every 10 s while running.)
-const saveState = () => { if (started) worker.postMessage({ type: 'saveState' }); };
+const saveState = () => { if (started) worker.postMessage({ type: 'save' }); };
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveState(); });
 window.addEventListener('pagehide', saveState);
 

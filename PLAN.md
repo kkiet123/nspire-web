@@ -36,15 +36,15 @@ How the work flows: big picture first; then, for each component, research it (fi
 2. Done: Phase 0, step 1: source unzipped into `firebird/`, git started (2026-11-16).
 3. Done: research [3] + [4], the core loop and its callbacks (`research/3-4-core-loop.md`). Contracts C and D are drafted there.
 4. Done (2026-11-17, by building, at the user's request): research [2] and [7], emsdk 7.0.0, Phase 1 (`web/build.py`, core patches, `web/bridge.cpp`) and the worker host. Findings: `research/2-7-first-web-build.md`.
-5. **Next:** agree contract B with the team (the draft is the message list in `web/worker.js`). This unblocks lane B's build.
+5. Done (2026-11-17): contract B, version 1 (`web/contract-b.md`), and `web/fake-worker.js`, which speaks it with a test pattern. This unblocks lane B's build.
 6. Done (2026-11-17): research and build [5] storage: the flash image and snapshots in IndexedDB; a reload resumes in about 1.3 s (`research/5-storage.md`).
 7. Done (2026-11-17): LCD off and idle-aware turbo (`research/2-7-first-web-build.md`, "Follow-ups").
 8. **Next:** speed (measure in a plain Chrome window first), then the open items in `research/5-storage.md`.
 
 **Lane B: web component (team; Claude guides)**
 1. Research [1]: keypad, touchpad and PC keys from Firebird's QML. Can start now.
-2. Agree contract B (lane A, step 5).
-3. Phase 3: build `<nspire-emu>` against a fake worker that sends a test pattern.
+2. Done (2026-11-17): contract B, version 1 (`web/contract-b.md`).
+3. **Can start now:** Phase 3, build `<nspire-emu>` against `web/fake-worker.js` (the test page shows it with `index.html?fake`).
 4. Research [9]: the test checklist for each app (`tests/checklist.md`). Any time.
 
 **Lane C: TI files (team)**
@@ -71,7 +71,7 @@ How the work flows: big picture first; then, for each component, research it (fi
 ### Phase 1: Compile the emulator to WebAssembly (Claude, team reviews)
 - [x] `web/build.py` covering all current core files (including `keypad.cpp`, `cx2.cpp`, `usb_cx2.cpp`, `usblink_cx2.cpp`), current Emscripten options and `-O3`. Link-time optimisation: still to try.
 - [x] Fix the old port: real setjmp/longjmp so errors reset instead of crashing, no fixed 1,000-loop main loop. Screen output: CX models only so far.
-- [x] `web/bridge.cpp` with the functions JavaScript calls: start, run for N milliseconds, key, touchpad, screen, send file or OS, speed. Still to add: save and restore a snapshot.
+- [x] `web/bridge.cpp` with the functions JavaScript calls: start, run for N milliseconds, key, touchpad, screen, send file or OS, speed, and (with storage, 2026-11-17) save and restore a snapshot.
 - **Done when:** the build has no errors and a bare test page loads it and shows "waiting for boot1/flash".
 
 ### Phase 2: First boot in the browser (Claude, needs the TI files)
@@ -80,7 +80,7 @@ How the work flows: big picture first; then, for each component, research it (fi
 - [x] Load them in the browser and draw the screen (2026-11-17: home screen, setup and Calculate work; `research/2-7-first-web-build.md`).
 - **Done when:** TI's home screen appears and you can move around with the keyboard.
 
-### Phase 3: The web component (team, Claude guides; can start now with a fake test-pattern screen)
+### Phase 3: The web component (team, Claude guides; can start now against `web/fake-worker.js`)
 - [ ] Custom element with Shadow DOM.
 - [ ] Calculator body and keypad: on-screen keys that react on `pointerdown`, PC keyboard mapping (ported from Firebird's `keymap.h` and `qml/Keypad.qml`), touchpad.
 - [ ] The 320×240 screen, scaled up sharply (`image-rendering: pixelated`).
@@ -89,9 +89,9 @@ How the work flows: big picture first; then, for each component, research it (fi
 
 ### Phase 4: Speed and smoothness (together)
 - [ ] Run at the real calculator's speed by default, so the cursor blink, key repeat and clock match. Add a turbo switch for heavy work.
-- [ ] Run the emulator in short timed slices, and send a frame only when the screen changes.
-- [ ] Save a snapshot in IndexedDB so it starts instantly instead of booting every time.
-- [ ] Keep the calculator's flash changes (saved documents) in IndexedDB, so they survive a page reload as they survive switching off the real calculator.
+- [x] Run the emulator in short timed slices, and send a frame only when the screen changes.
+- [x] Save a snapshot in IndexedDB so it starts instantly instead of booting every time.
+- [x] Keep the calculator's flash changes (saved documents) in IndexedDB, so they survive a page reload as they survive switching off the real calculator.
 - [ ] Measure boot time and heavy calculations against the real calculator, plus frame timing (Chrome's Performance panel) and Lighthouse.
 - **Done when:** the numbers are recorded next to the real calculator's and the page stays smooth during heavy calculations.
 

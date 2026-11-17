@@ -3,8 +3,10 @@
 // The core never waits on its own (turbo_mode is on inside it). This worker
 // paces it against the wall clock in 10 ms steps of emulated time, applies
 // input between slices, and posts a frame only when the picture changed.
-// Messages are the draft of contract B (see COMPONENTS.md).
+// Its messages are contract B, version 1: web/contract-b.md.
 'use strict';
+
+const PROTOCOL = 1;             // contract B version, sent in 'ready'
 
 // build.py replaces __BUILD__ with a hash of the build, so browsers never
 // mix a cached old file with a new one.
@@ -38,7 +40,7 @@ let uploads = 0;                // numbers the local copies of sent files
 // snapshots: 'latest' -> { core, setId, data (gzip), savedAt }
 // A snapshot carries only the flash blocks changed since the last flash save,
 // so it fits exactly the flash saved just before it: saving blocks alone
-// deletes the snapshot, and saveState writes both in one transaction.
+// deletes the snapshot, and 'save' writes both in one transaction.
 const CORE_ID = '__CORE__';     // build.py: hash of firebird.wasm; a snapshot fits only that build
 const DB_NAME = 'nspire-web';
 const AUTOSAVE_MS = 10000;      // real time between flash saves while running
@@ -203,33 +205,78 @@ async function restore() {
     M.FS.writeFile('/snapshot.gz', new Uint8Array(snap.data));
     const resumed = start(true);
     M.FS.unlink('/snapshot.gz');
-    if (resumed) {
-      post({ type: 'status', text: 'Resumed from the saved state' });
-      return;
-    }
+    if (resumed) return;
     post({ type: 'log', text: '[storage] the snapshot did not load; booting from the saved flash' });
   }
-  if (start(false)) post({ type: 'status', text: 'Booting from the saved flash' });
+  start(false);
 }
 
-async function probe() {
+// Contract B 'storage': what is saved in this browser.
+async function storageInfo() {
   try {
     const meta = await read('files', 'meta');
     const snap = meta ? await read('snapshots', 'latest') : null;
     post({
-      type: 'saved', exists: !!meta, blocks: meta ? await count('blocks') : 0,
+      type: 'storage', exists: !!meta, blocks: meta ? await count('blocks') : 0,
       snapshot: !!(snap && snap.core === CORE_ID && snap.setId === meta.setId),
       savedAt: meta ? meta.savedAt : null,
     });
   } catch (err) {
-    post({ type: 'saved', exists: false, error: String(err) });
+    post({ type: 'storage', exists: false, snapshot: false, blocks: 0, savedAt: null, error: String(err) });
   }
 }
 
 async function forget() {
   await transact(['files', 'blocks', 'snapshots'], (s) => { s.files.clear(); s.blocks.clear(); s.snapshots.clear(); });
   setId = null;
-  post({ type: 'status', text: 'Forgot the saved setup' });
+}
+
+// ---- Loading files (contract B 'load') ----------------------------------
+
+// The model comes from the manufacturing data: product at 0x804 (high
+// nibbles) and revision, features at 0x81C (flash.cpp, manuf_data_804).
+// CX II manuf data uses another layout (flash.cpp, FieldParser).
+function readManuf(buf) {
+  const v = new DataView(buf);
+  if ((v.getUint32(0, true) & 0xF0FF) === 0x0050) return { product: 0x1C0, features: 0 };
+  return { product: (v.getUint16(0x804, true) << 4) | v.getUint16(0x806, true), features: v.getUint32(0x81C, true) };
+}
+
+const MODEL_NAMES = { 0x0C: 'Touchpad CAS', 0x0E: 'Touchpad', 0x0F: 'CX CAS', 0x10: 'CX', 0x11: 'CM CAS',
+  0x12: 'CM', 0x1C: 'CX II CAS', 0x1D: 'CX II', 0x1E: 'CX II-T' };
+const HW_NAMES = { 0x05: 'HW-A', 0x85: 'HW-J', 0x185: 'HW-W' };
+function describeModel(m) {
+  const name = MODEL_NAMES[m.product >> 4] || 'unknown model';
+  return { product: m.product, features: m.features, name: HW_NAMES[m.features] ? `${name} ${HW_NAMES[m.features]}` : name };
+}
+
+// files: { boot1, flash } or { boot1, boot2, manuf?, diags?, os? } (ArrayBuffers).
+// Without a flash image it builds one, with the OS preloaded when osInFlash.
+async function load(msg) {
+  if (running) throw new Error('the emulator is already running; reload the page to load other files');
+  const f = msg.files || {};
+  if (!f.boot1) throw new Error('boot1 is missing');
+  M.FS.writeFile('/boot1.img', new Uint8Array(f.boot1));
+  let model = null;               // with a ready flash image the core reads the model itself
+  if (f.flash) {
+    M.FS.writeFile('/flash.img', new Uint8Array(f.flash));
+  } else {
+    if (!f.boot2) throw new Error('need a flash image, or boot2 to build one');
+    model = f.manuf ? readManuf(f.manuf) : { product: 0x0F0, features: 0x05 };
+    if (model.product >= 0x1C0) throw new Error('flash images for the CX II can not be built here yet; load a full flash image');
+    const withOS = !!(msg.osInFlash && f.os);
+    M.FS.writeFile('/boot2.img', new Uint8Array(f.boot2));
+    if (f.manuf) M.FS.writeFile('/manuf.img', new Uint8Array(f.manuf));
+    if (f.diags) M.FS.writeFile('/diags.img', new Uint8Array(f.diags));
+    if (withOS) M.FS.writeFile('/os.tcc', new Uint8Array(f.os));
+    const ok = M._nw_create_flash(model.product, model.features, f.manuf ? 1 : 0, f.diags ? 1 : 0, withOS ? 1 : 0);
+    for (const name of ['/boot2.img', '/manuf.img', '/diags.img', '/os.tcc']) {
+      if (M.FS.analyzePath(name).exists) M.FS.unlink(name);
+    }
+    if (!ok) throw new Error('could not build the flash image');
+  }
+  if (msg.remember) await storeSetup();
+  post({ type: 'loaded', model: model && describeModel(model), stored: !!msg.remember });
 }
 
 // A press and its release can both arrive between two slices; applied
@@ -283,7 +330,8 @@ createFirebird({
   onProgress: (what, value) => post({ type: 'progress', what: what === 1 ? 'os' : 'file', value }),
 }).then((module) => {
   M = module;
-  post({ type: 'ready' });
+  post({ type: 'ready', protocol: PROTOCOL, build: '__BUILD__', core: CORE_ID });
+  for (const msg of early.splice(0)) handle(msg);   // messages sent before the wasm was ready
 }).catch((err) => post({ type: 'error', message: 'Could not load firebird.wasm: ' + err }));
 
 // A zero-delay way back into the loop: setTimeout(0) is clamped to 4 ms.
@@ -302,7 +350,7 @@ function loop() {
     // A crash inside the core (abort, memory error) would otherwise end the
     // loop silently and leave a frozen screen. Stop and say why instead.
     running = false;
-    post({ type: 'error', message: 'The emulator stopped: ' + String(err && err.stack || err) });
+    post({ type: 'error', fatal: true, message: 'The emulator stopped: ' + String(err && err.stack || err) });
   }
 }
 
@@ -354,12 +402,6 @@ function pushFrame() {
   post({ type: 'frame', rgba: rgba.buffer }, [rgba.buffer]);
 }
 
-function writeFiles(files) {
-  for (const [name, data] of Object.entries(files)) {
-    if (data) M.FS.writeFile('/' + name, new Uint8Array(data));
-  }
-}
-
 // fromSnapshot: resume /snapshot.gz instead of booting. Returns whether it runs.
 function start(fromSnapshot = false) {
   if (running) return true;
@@ -371,29 +413,30 @@ function start(fromSnapshot = false) {
   virtMs = 0;
   t0 = performance.now();
   lastAutosave = t0;
-  post({ type: 'started' });
+  post({ type: 'started', resumed: fromSnapshot });
   schedule(0);
   return true;
 }
 
+// Messages that arrive before the wasm is ready wait here, in order.
+const early = [];
 self.onmessage = (event) => {
-  const msg = event.data;
-  if (!M) {
-    post({ type: 'error', message: 'Not ready yet.' });
-    return;
-  }
+  if (!M) early.push(event.data);
+  else handle(event.data);
+};
+
+const fail = (what) => (err) => post({ type: 'error', message: `${what}: ${err && err.message || err}` });
+
+// Contract B, page -> worker (web/contract-b.md).
+function handle(msg) {
   try {
     switch (msg.type) {
-      case 'files':          // { files: { 'boot1.img': ArrayBuffer, ... } }
-        writeFiles(msg.files);
+      case 'load':           // { files, osInFlash?, remember? } -> 'loaded'
+        load(msg).catch(fail('Could not load the files'));
         break;
-      case 'createFlash': {  // { product, features, manuf, diags, os }
-        const ok = M._nw_create_flash(msg.product, msg.features, msg.manuf ? 1 : 0, msg.diags ? 1 : 0, msg.os ? 1 : 0);
-        post(ok ? { type: 'status', text: 'Flash image created' } : { type: 'error', message: 'Could not create the flash image.' });
-        break;
-      }
-      case 'start':
-        start();
+      case 'start':          // { saved? } -> 'started'
+        if (msg.saved) restore().catch(fail('Could not load the saved setup'));
+        else start(false);
         break;
       case 'key': {          // { row, col, down }
         const apply = (down) => M._nw_key(msg.row, msg.col, down ? 1 : 0);
@@ -428,34 +471,28 @@ self.onmessage = (event) => {
       case 'reset':
         M._nw_reset();
         break;
-      case 'debug': {
+      case 'save':           // { snapshot? (default true) } -> 'storage'
+        if (!setId) {
+          post({ type: 'error', message: 'Nothing to save to: load the files with remember: true first.' });
+        } else {
+          persist(msg.snapshot !== false).then((ok) => ok && storageInfo());
+        }
+        break;
+      case 'queryStorage':   // -> 'storage'
+        storageInfo();
+        break;
+      case 'forget':         // -> 'storage'
+        forget().then(storageInfo, fail('Could not clear the saved setup'));
+        break;
+      case 'debug': {        // development only
         const ptr = M._nw_debug_info();
         post({ type: 'debug', info: Array.from(new Int32Array(M.HEAPU8.buffer, ptr, 32)), virtMs });
         break;
       }
-      case 'saveFlash':
-        if (setId) persist(false).then((ok) => ok && post({ type: 'status', text: 'Flash saved in the browser' }));
-        else post(M._nw_save_flash() ? { type: 'status', text: 'Flash saved (in memory only)' } : { type: 'error', message: 'Saving the flash failed.' });
-        break;
-      case 'probe':          // -> { type: 'saved', exists, snapshot, blocks, savedAt }
-        probe();
-        break;
-      case 'store':          // remember the loaded files as the saved setup
-        storeSetup().catch((err) => post({ type: 'error', message: 'Could not save the setup: ' + err }));
-        break;
-      case 'restore':        // start from the saved setup (snapshot if it fits)
-        restore().catch((err) => post({ type: 'error', message: 'Could not load the saved setup: ' + err }));
-        break;
-      case 'saveState':      // flash blocks + snapshot, e.g. when the page is hidden
-        persist(true).then((ok) => ok && running && post({ type: 'status', text: 'State saved' }));
-        break;
-      case 'forget':
-        forget().catch((err) => post({ type: 'error', message: 'Could not clear the saved setup: ' + err }));
-        break;
       default:
         post({ type: 'error', message: 'Unknown message: ' + msg.type });
     }
   } catch (err) {
     post({ type: 'error', message: String(err && err.stack || err) });
   }
-};
+}
