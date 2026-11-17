@@ -4,7 +4,7 @@
 
 ## Result
 - The team's own files boot TI's real OS in the browser: boot1, Boot1.5 and boot2 4.5.0.14, then TI-Nspire CX CAS OS 4.5.5.79 through first-time setup to the home screen. Calculate works (`2+3` → 5, `12·34` → 408); keys, arrows and the touchpad click all reach the OS.
-- Speed: about 100 % of a real CX at the home screen and during boot (the worker paces it); about 55–65 % at most while the OS installs (CPU-bound).
+- Speed: about 100 % of a real CX at the home screen and during boot (the worker paces it); about 55–65 % at most while the OS installs (CPU-bound) in the test browser, but see "Headless checks": the same build is faster than a real CX in Node 24.
 - `firebird.wasm` is 0.22 MB at `-O3`, `firebird.js` 75 KB.
 
 ## [7] Toolchain
@@ -20,7 +20,7 @@
 ## [2] Worker host (as built)
 - Pacing: the core runs with `turbo_mode` on and never waits. The worker owes the emulator the wall-clock time since start minus the emulated time already run, runs it in 10 ms steps through `nw_run(maxVirtualMs, 8 ms real)`, and forgets debt beyond 200 ms (when the emulator is slower than real time). A `MessageChannel` gives zero-delay turns; `setTimeout` covers the waits.
 - Frames: the bridge counts LCD refreshes through `gif_new_frame()`, renders only after a refresh, compares with the last picture, and converts RGB565 to RGBA in C. The worker posts at most about 60 frames per second as a transferred buffer.
-- Keys: a tap's press and release can arrive between two slices, and the boot loader scans the keypad only now and then (its "Press 'I' to install" prompt missed 50–120 ms taps). The worker holds each release until the key has been down 80 ms of emulated time and a keypad scan has seen it (`nw_key_seen`, reading `kpc.data`), or 1 s has passed (calculator off, or the ON key, which the power unit handles).
+- Keys: a tap's press and release can arrive between two slices, and the boot loader scans the keypad only now and then (its "Press 'I' to install" prompt missed 50–120 ms taps). The worker holds each release until the key has been down 80 ms of emulated time and a keypad scan has seen it (`nw_key_seen`, reading `kpc.data`), or 1 s has passed (calculator off, or the ON key, which the power unit handles). Changes wait in a queue per key, and a second press waits until the release has lasted 80 ms: the first version cancelled the waiting release instead, so a quick double tap ("00") reached the OS as one press (`tests/worker-keys.js` covers both).
 - Arrows press the touchpad's edges, as the desktop app does; `touch` messages pass `touchpad_set_state` through.
 - Contract B draft (`worker.js`): in `files`, `createFlash`, `start`, `key`, `arrow`, `touch`, `turbo`, `sendOS`, `sendFile`, `reset`, `saveFlash`, `debug`; out `ready`, `started`, `frame`, `speed`, `status`, `log`, `usblink`, `progress`, `error`.
 
@@ -29,9 +29,16 @@
 - **Turbo races idle time.** When the OS is idle, turbo runs emulated time hundreds of times faster than real time, so the calculator's auto power-off fires within seconds. Turbo should probably speed up only busy periods, and must not be left on while waiting for input.
 - **The screen can go stale.** When the LCD stops refreshing (calculator off), the page keeps the last picture. The bridge should report "LCD off" after a few hundred ms without a refresh.
 - **Nothing persists yet.** The installed OS lives in the worker's memory, so every reload reinstalls (about 90 s). Saving the flash image (and a snapshot) is component [5]'s first job.
-- **CPU-bound speed is below real time.** About 55–65 % of a real CX during the install, on this PC. Phase 4 has to close this (link-time optimisation, interpreter hot spots, maybe a JIT).
+- **CPU-bound speed: measure again before tuning.** The test browser showed about 55–65 % of a real CX during the install, but the same build reaches 128–216 % in Node 24 (see below). An attached debugger or automation tool can slow WebAssembly, so measure in a plain Chrome window with DevTools closed. If that also shows less than 100 %, Phase 4 has to close it (link-time optimisation, interpreter hot spots, maybe a JIT).
 - **PC keys:** symbol keys (`*`, `+`, `(`, `^`) sit in different places on different layouts, so lane B should map them by `KeyboardEvent.key` and keep `code` for letters, digits and navigation.
 - The serial port (UART) shows the boot loader's and OS's messages; the test page prints them, which made this debugging possible.
+
+## Headless checks (2026-11-17, review)
+The objects `build.py` compiles were linked a second time with `-sENVIRONMENT=node` (same flags otherwise, output in `web/build/nodetest/`) and run in Node 24 (V8, the engine in Chrome) on the files in `roms/`, with no browser:
+- Both flash paths boot to a working calculator: `cxcas-4.5.5.img`, and an image built in the worker from boot2 + manuf + diags + OS (`nw_create_flash` with `readManuf`'s product 0x0F0 and features 0x05). Each went Factory image → `I` → install → setup → home screen → Calculate, where `2+3` gave 5.
+- Speed during the install, per 2 s of emulated time: 128–216 %, median 149 % of a real CX. Idle time costs almost nothing (WFI skips to the next event).
+- The real `worker.js` (in a `vm` context) paced the core at 97–103 % through the install, and a 60 ms tap of `I` reached boot2 ("Copying pre-installed image into RAM").
+- A throw from inside `nw_run` now stops the loop and posts an `error`; before, the loop ended silently and left a frozen screen.
 
 ## Still open
 - [ ] "LCD off" detection in the bridge.
