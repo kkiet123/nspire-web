@@ -1,8 +1,10 @@
 #include <assert.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <string.h> // nspire-web: strcmp, needed by current Emscripten
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <unistd.h> // nspire-web: close, needed by current Emscripten
 
 #include <emscripten.h>
 

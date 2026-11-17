@@ -34,7 +34,10 @@ bool exiting, debug_on_start, debug_on_warn, print_on_warn;
 BootOrder boot_order = ORDER_DEFAULT;
 std::string path_boot1, path_flash;
 
-#if defined(IS_IOS_BUILD) || defined(__EMSCRIPTEN__)
+// nspire-web: Emscripten no longer takes this branch. It gets the real
+// setjmp/longjmp below (built with WebAssembly exceptions), so error()
+// resets the calculator instead of aborting.
+#if defined(IS_IOS_BUILD)
 // on iOS, setjmp and longjmp are broken and builtins setfault clang
 typedef bool emu_jmp_buf;
 static inline void emu_setjmp(emu_jmp_buf) {}
@@ -321,18 +324,15 @@ bool emu_start(unsigned int port_gdb, unsigned int port_rdbg, const char *snapsh
     return true;
 }
 
-void emu_loop(bool reset)
-{
-    #if OS_HAS_PAGEFAULT_HANDLER
-        os_exception_frame_t seh_frame = { NULL, NULL };
-        os_faulthandler_arm(&seh_frame);
-    #endif
+// nspire-web: emu_loop() is split into emu_loop_begin() and emu_loop_run(),
+// so a host without threads (the browser) can run the emulator in slices.
+// The desktop behaviour is unchanged: emu_loop() is begin + run.
+bool emu_yield_requested = false;
 
+void emu_loop_begin(bool reset)
+{
     if(reset)
-    {
-        reset:
         emu_reset();
-    }
 
     gdbstub_reset();
 
@@ -342,15 +342,25 @@ void emu_loop(bool reset)
     sched_update_next_event(0);
 
     exiting = false;
+}
 
+void emu_loop_run(void)
+{
+    // Set on every call: the frame that called setjmp must still be live
+    // when error() jumps back.
     emu_setjmp(restart_after_exception);
 
     while (!exiting) {
         sched_process_pending_events();
+        if (emu_yield_requested) {
+            emu_yield_requested = false;
+            return;
+        }
         while (!exiting && cycle_count_delta < 0) {
             if (cpu_events & EVENT_RESET) {
                 gui_status_printf("Reset");
-                goto reset;
+                emu_loop_begin(true);
+                break;
             }
 
             if (cpu_events & EVENT_SLEEP) {
@@ -380,6 +390,17 @@ void emu_loop(bool reset)
                 cpu_arm_loop();
         }
     }
+}
+
+void emu_loop(bool reset)
+{
+    #if OS_HAS_PAGEFAULT_HANDLER
+        os_exception_frame_t seh_frame = { NULL, NULL };
+        os_faulthandler_arm(&seh_frame);
+    #endif
+
+    emu_loop_begin(reset);
+    emu_loop_run();
 
     #if OS_HAS_PAGEFAULT_HANDLER
         os_faulthandler_unarm(&seh_frame);

@@ -107,6 +107,15 @@ bool snapshot_write(emu_snapshot *snapshot, const void *src, int size);
 
 bool emu_start(unsigned int port_gdb, unsigned int port_rdbg, const char *snapshot);
 void emu_loop(bool reset);
+
+// nspire-web: emu_loop() split for hosts without threads (the browser).
+// emu_loop_begin() runs the one-time preamble. emu_loop_run() runs until
+// `exiting` or until the host sets emu_yield_requested (checked after each
+// batch of scheduler events), and can then be called again to continue.
+extern bool emu_yield_requested;
+void emu_loop_begin(bool reset);
+void emu_loop_run(void);
+
 bool emu_suspend(const char *file);
 void emu_cleanup();
 

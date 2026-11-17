@@ -795,12 +795,20 @@ void debugger(enum DBG_REASON reason, uint32_t addr) {
     if (in_debugger)
         return;
 
+#ifdef __EMSCRIPTEN__
+    // nspire-web: no interactive debugger in the browser. The native one
+    // waits in a loop for typed commands and would hang the worker; the
+    // caller has already logged the reason.
+    (void) reason;
+    (void) addr;
+#else
     gui_debugger_entered_or_left(in_debugger = true);
     if (gdb_connected)
         gdbstub_debugger(reason, addr);
     else
         native_debugger();
     gui_debugger_entered_or_left(in_debugger = false);
+#endif
 }
 
 void rdebug_quit()
