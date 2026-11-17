@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nspire-web test page</title>
+<style>
+  body { font: 14px system-ui, sans-serif; margin: 16px; background: #f4f4f2; color: #222; }
+  #screen { width: 640px; max-width: 100%; aspect-ratio: 4 / 3; image-rendering: pixelated; background: #000; display: block; border: 1px solid #888; outline: none; }
+  #screen:focus { border-color: #2a6fdb; }
+  .row { margin: 8px 0; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  fieldset { border: 1px solid #bbb; margin: 12px 0; }
+  #log { height: 240px; overflow: auto; background: #111; color: #ddd; padding: 8px; font: 12px ui-monospace, monospace; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<h1>nspire-web test page</h1>
+<p>Development harness for the emulator core, not the final component. Your TI files stay on this computer.</p>
+<canvas id="screen" width="320" height="240" tabindex="0"></canvas>
+<div class="row"><span>Speed: <b id="speed">-</b></span><span>Status: <span id="status">loading...</span></span></div>
+<div class="row">
+  <button id="devload">Load files from /roms (dev)</button>
+  <label><input type="checkbox" id="preloados"> Put the OS into the new flash image</label>
+  <button id="start" disabled>Start</button>
+  <button id="turbo">Turbo: off</button>
+  <button id="sendos">Send OS over USB</button>
+  <button id="on">ON key</button>
+  <button id="reset">Reset</button>
+  <button id="saveflash">Save flash</button>
+</div>
+<fieldset>
+  <legend>Or choose your own files</legend>
+  <div class="row">boot1 <input type="file" id="f-boot1"> flash image (optional) <input type="file" id="f-flash"></div>
+  <div class="row">To build a flash image: boot2 <input type="file" id="f-boot2"> manuf <input type="file" id="f-manuf"> diags <input type="file" id="f-diags"> OS <input type="file" id="f-os"></div>
+  <div class="row"><button id="usefiles">Use these files</button></div>
+</fieldset>
+<p>Click the screen, then type. Arrows = touchpad arrows; Enter, Esc, Tab; Backspace = del; Home = on; PageUp = doc; PageDown = menu; Ctrl, Shift, letters, digits.</p>
+<div id="log"></div>
+<script src="main.js?v=__BUILD__"></script>
+</body>
+</html>
