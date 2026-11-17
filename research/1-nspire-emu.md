@@ -6,7 +6,14 @@
 
 ## Look fixes from the team's photo (done 2026-11-17)
 
-The team photographed its own CX CAS (`web/build/ref/real.webp`, git-ignored, local only). Colours below are corrected for the photo's warm light, with the white key text as the reference. All of the list below is now in `web/nspire-emu.js`, checked side by side with the photo. Left as they are: the TI emblem (not drawn); the script-like n of "nspire" (Candara bold italic instead); and where Arial Rounded MT Bold is missing, the keys fall back to Segoe UI.
+The team photographed its own CX CAS (`web/build/ref/real.webp`, git-ignored, local only). Colours below are corrected for the photo's warm light, with the white key text as the reference. All of the list below is now in `web/nspire-emu.js`, checked side by side with the photo.
+
+Second pass, after the user's review (2026-11-17), with each font picked by setting candidates next to enlarged crops of the photo:
+- Wider grey side rails (15 units); below the touchpad matte black, a little lighter than the glass, not grey.
+- "TI-" thin Segoe UI; a calligraphic n (Garamond italic) and "spire" (Segoe UI bold italic), both silver; "CX" white, Century Gothic bold italic; "CAS" silver Segoe UI bold.
+- "Texas Instruments" in Constantia small caps (wedge serifs, close to TI's wordmark) after a simplified TI logo (Texas with "ti"; replace it with TI's artwork when the team has it).
+- The keys around the touchpad use a bold humanist face (Segoe UI Bold, larger); the row under the touchpad, the number rows and enter use Segoe UI Semibold, slimmer; the letter keys are square (28 × 28) with a bigger Arial Rounded MT Bold; ctrl labels are Segoe UI Semibold.
+- Left as they are: where these Windows fonts are missing, the browser falls back to Segoe UI or a system face.
 - **Names (the user's decision: the team works with TI):** "TI-nspire CX" centred at the top ("TI-" thin, "nspire" italic with a script-like n, "CX" light cyan), "CAS" bold white on the right, "Texas Instruments" in small caps at the bottom. No TI emblem drawn (use TI's own file if they give one). Move the "nspire-web · Firebird" credit from the body to the demo page.
 - **Colours:** ctrl key pale yellow (about `#f0e3a4`) with dark text; ctrl labels pale cyan (about `#b5e2ee`); number keys and X, Y, Z mid grey; touchpad ring metallic champagne; glossy black glass from the top down to the touchpad band; dark grey lower panel; lighter grey side rails.
 - **Fonts:** key labels in a bold rounded face: Arial Rounded MT Bold is installed here. Declare it with `@font-face { src: local(...) }` in the document, since `@font-face` is ignored inside a shadow root. "nspire" in a bold italic (try Candara), "Texas Instruments" in small caps (Candara).

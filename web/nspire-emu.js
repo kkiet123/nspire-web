@@ -69,17 +69,22 @@ const ICON = {
   // On the keys
   pad: svg(20, 14, '<path d="M2 13 5.5 1M4.6 13 8.1 1M7.2 13 10.7 1"/><rect x="11.5" y="1" width="7.5" height="12" rx="1"/><path d="M13 3.4h4.5"/>'
     + fill(grid([12.9, 14.9, 16.9], [5.6, 7.9, 10.2], 1.4, 1.2))),
-  home: svg(14, 13, '<path d="M1.5 6.8 7 1.8l5.5 5"/><path d="M3 5.6V12h3V8.8h2V12h3V5.6"/>'),
-  shift: svg(10, 12, '<path d="M5 1 1 6.2h2.4V11h3.2V6.2H9z"/>'),
-  back: svg(16, 5, '<path d="M15 2.5H2.5M5 .6 2 2.5 5 4.4"/>'),
-  caret: svg(14, 9, '<path d="M2 7.5 7 2.2l5 5.3"/>'),
+  home: svg(15, 14, '<path d="M1.5 7.2 7.5 2l6 5.2"/><path d="M3.2 5.8V13h3.4V9.4h1.8V13h3.4V5.8"/><path d="M10.6 4.6V2.1h1.5v3.8"/>'),
+  shift: svg(11, 13, '<path d="M5.5 1.2 1 6.8h2.6V12h3.8V6.8H10z"/>'),
+  back: svg(17, 5, '<path d="M16 2.5H2.5M5.2.5 2 2.5l3.2 2" stroke-width="1.4"/>'),
+  caret: svg(15, 9, '<path d="M2 7.6 7.5 2.2l5.5 5.4" stroke-width="2"/>'),
   templates: svg(19, 12, '<path d="M1.5 1.5v9M7.3 1.5v9"/><rect x="2.9" y="4" width="3" height="4" rx=".4"/>'
     + '<path d="M12.6 1.5c-1.1 0-1.4.5-1.4 1.4v1.5c0 .8-.4 1.6-1.2 1.6.8 0 1.2.8 1.2 1.6v1.5c0 .9.3 1.4 1.4 1.4"/>'
     + '<rect x="14.3" y="2" width="3" height="3" rx=".4"/><rect x="14.3" y="7" width="3" height="3" rx=".4"/>'),
   catalog: svg(20, 12, '<path d="M10 2.6C8 1.3 4.9 1 1.5 1.8v8.9c3.4-.8 6.5-.5 8.5.8 2-1.3 5.1-1.6 8.5-.8V1.8C15.1 1 12 1.3 10 2.6zM10 2.6v8.9"/>'),
   flag: svg(12, 13, '<path d="M2.5 12.5V1.5h8l-2 2.8 2 2.8h-8"/>'),
   ret: svg(14, 10, '<path d="M12.5 1v5.5H2"/><path d="M4.8 3.6 2 6.5l2.8 2.9"/>'),
-  space: svg(18, 7, '<path d="M1.5 1.5v4h15v-4"/>'),
+  space: svg(18, 8, '<path d="M2 1.5v5h14v-5" stroke-width="2.2" stroke-linecap="butt" stroke-linejoin="miter"/>'),
+  // The TI logo, simplified: Texas with "ti" in it. Replace it with TI's own
+  // artwork when the team has it.
+  ti: svg(18, 17, fill('<path d="M.4 7.3 4.9 7 5 .5h3.8v2.8c1.2.6 2.4.9 3.8 1.1l3.8.4v2.3l.5 3.3-1.5.7-1.6 1-1.7 1.2.3 2.8-3-2.3-1.8-2.9-3 .6-1.5-.9z"/>')
+    + '<path d="M7.4 5.2v5.6c0 .6.4.9 1 .8M6 7h2.8M10.6 7.4v4.2" stroke="#1d1c1b" stroke-width="1.3"/>'
+    + '<circle cx="10.6" cy="5.4" r=".8" fill="#1d1c1b" stroke="none"/>'),
   // ctrl functions, printed above the keys
   undo: svg(11, 9, '<path d="M3.5 3h4a3 3 0 0 1 0 6H5"/><path d="M5.5 1 3.2 3l2.3 2"/>'),
   context: svg(13, 10, '<path d="M1 1h7.5v8H1z"/><path d="M2.7 3.3h4M2.7 5.3h4M2.7 7.3h2.5"/><path d="M9 5v4.3l1.1-1 .9 1.6.8-.4-.9-1.6h1.5z" fill="currentColor" stroke-width=".5"/>'),
@@ -124,17 +129,20 @@ function keypad() {
     ['on', ICON.home + 'on', 338, 317, 49, 26, 'fn', 'off', 'on'],
     ['doc', 'doc<span class="tri">▾</span>', 338, 365, 49, 26, 'fn', '+page', 'doc'],
     ['menu', 'menu', 338, 413, 49, 26, 'fn', ICON.context],
-    ['ctrl', 'ctrl', 37, 470, 49, 25, 'ctrl'],
-    ['shift', ICON.shift + 'shift', 126, 470, 46, 25, 'fn small', 'CAPS', 'shift'],
-    ['var', 'var', 252, 470, 46, 25, 'fn', 'sto→'],
-    ['del', stack('del', ICON.back), 338, 470, 49, 25, 'fn', 'clear', 'del'],
+    // The row under the touchpad, the number rows and enter use a lighter,
+    // slimmer face than the keys around the touchpad ('mid').
+    ['ctrl', 'ctrl', 37, 470, 49, 25, 'ctrl mid'],
+    ['shift', ICON.shift + 'shift', 126, 470, 46, 25, 'fn mid small', 'CAPS', 'shift'],
+    ['var', 'var', 252, 470, 46, 25, 'fn mid', 'sto→'],
+    ['del', stack('del', ICON.back), 338, 470, 49, 25, 'fn mid', 'clear', 'del'],
   ];
   const rowY = [512, 556, 600, 644];
+  const sym = (s) => `<span class="sym">${s}</span>`;
   const leftPairs = [
-    [['equ', '=', '|≠≥▸'], ['trig', stack('trig', '<span class="tri">▸</span>'), ICON.help, 'trig']],
+    [['equ', sym('='), '|≠≥▸', '='], ['trig', stack('trig', '<span class="tri">▸</span>'), ICON.help, 'trig']],
     [['pow', ICON.caret, 'ⁿ√x', 'power'], ['squ', 'x²', ICON.root]],
     [['exp', 'eˣ', 'ln'], ['pow10', '10ˣ', 'log']],
-    [['pleft', '(', '[ ]'], ['pright', ')', '{ }']],
+    [['pleft', sym('('), '[ ]', '('], ['pright', sym(')'), '{ }', ')']],
   ];
   const numbers = [
     [['n7', '7'], ['n8', '8'], ['n9', '9']],
@@ -144,8 +152,8 @@ function keypad() {
   ];
   const rightPairs = [
     [['metrix', ICON.templates, ':=', 'templates'], ['cat', ICON.catalog, '∞β°', 'catalog']],
-    [['mult', '×', ICON.quoted], ['div', '÷', ICON.frac]],
-    [['plus', '+', ICON.contrastUp], ['minus', '−', ICON.contrastDown]],
+    [['mult', sym('×'), ICON.quoted, 'multiply'], ['div', sym('÷'), ICON.frac, 'divide']],
+    [['plus', sym('+'), ICON.contrastUp, 'plus'], ['minus', sym('−'), ICON.contrastDown, 'minus']],
   ];
   // Each pair is one rocker key with a groove, as on the calculator.
   const pair = (i) => (i ? 'pair pairR' : 'pair pairL');
@@ -154,7 +162,7 @@ function keypad() {
     numbers[r].forEach(([name, label, ctrl, spoken], i) => keys.push([name, label, 126 + i * 63, y, 46, 28, 'num', ctrl, spoken]));
     if (r < 3) rightPairs[r].forEach(([name, label, ctrl, spoken], i) => keys.push([name, label, 318 + i * 35.5, y, 34, 28, pair(i), ctrl, spoken]));
   });
-  keys.push(['enter', 'enter', 318, rowY[3], 69.5, 28, 'fn', '≈']);
+  keys.push(['enter', 'enter', 318, rowY[3], 69.5, 28, 'fn mid', '≈']);
   const letters = [
     [['ee', 'EE'], 'A', 'B', 'C', 'D', 'E', 'F', 'G', ['punct', '?!▸', 'punctuation']],
     [['pi', 'π▸', 'pi'], 'H', 'I', 'J', 'K', 'L', 'M', 'N', ['flag', ICON.flag, 'flag']],
@@ -164,9 +172,10 @@ function keypad() {
   letters.forEach((row, r) => row.forEach((k, c) => {
     if (!k) return;
     const [name, label, spoken] = typeof k === 'string' ? ['a' + k.toLowerCase(), k] : k;
-    const width = name === 'space' ? 68.5 : 29;
+    // Letter keys are square on the calculator; space spans two columns.
+    const width = name === 'space' ? 67.5 : 28;
     const style = ['X', 'Y', 'Z'].includes(label) ? 'letter grey' : 'letter';   // grey on the calculator
-    keys.push([name, label, 41 + c * 39.5, 690 + r * 34, width, 24, style, '', spoken]);
+    keys.push([name, label, 41 + c * 39.5, 688 + r * 33, width, 28, style, '', spoken]);
   }));
   return keys;
 }
@@ -175,42 +184,53 @@ const STYLE = `
 :host { display: inline-block; vertical-align: top; outline: none; -webkit-tap-highlight-color: transparent; }
 .calc { position: relative; width: ${W}px; height: ${H}px; box-sizing: border-box;
   border-radius: 24px 24px 44px 44px / 24px 24px 56px 56px;
-  background: linear-gradient(90deg, #5e5b57, #3e3c39 2.2%, #2f2d2b 6%, #2f2d2b 94%, #3e3c39 97.8%, #5e5b57);
-  box-shadow: 0 12px 34px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(255, 255, 255, .12);
-  font-family: "Nspire Keys", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif; font-weight: 700;
+  /* the grey side rails */
+  background: linear-gradient(90deg, #353331, #6f6b66 1.3%, #5d5a56 2.6%, #4b4845 3.6%, #4b4845 96.4%, #5d5a56 97.4%, #6f6b66 98.7%, #353331);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(255, 255, 255, .14);
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif; font-weight: 700;
   user-select: none; -webkit-user-select: none; cursor: default; }
 :host(:focus-visible) .calc { box-shadow: 0 0 0 3px #5b9dff, 0 12px 34px rgba(0, 0, 0, .4); }
 .calc.drop { box-shadow: 0 0 0 4px #43a047, 0 12px 34px rgba(0, 0, 0, .4); }
 /* Glossy black glass from the top down to the touchpad band, a grey keypad below. */
-.glass { position: absolute; left: 9px; right: 9px; top: 5px; height: 451px; border-radius: 19px 19px 4px 4px; overflow: hidden;
-  background: linear-gradient(178deg, #1c1b1a, #080808 16%, #050505); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1); }
+.glass { position: absolute; left: 15px; right: 15px; top: 6px; height: 450px; border-radius: 17px 17px 4px 4px; overflow: hidden;
+  background: linear-gradient(178deg, #1c1b1a, #080808 16%, #050505); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), 0 0 0 1px #111; }
 .glass::after { content: ''; position: absolute; inset: 0;
   background: linear-gradient(116deg, rgba(255, 255, 255, .075), rgba(255, 255, 255, .02) 24%, transparent 42%); }
-.lower { position: absolute; left: 9px; right: 9px; top: 456px; bottom: 10px;
-  border-radius: 3px 3px 36px 36px / 3px 3px 46px 46px;
-  background: linear-gradient(#393633, #33312e 50%, #2d2b29);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .09), 0 -1px 0 #000; }
-.model { position: absolute; left: 139px; top: 10px; display: flex; align-items: baseline; color: #f4f1eb; white-space: nowrap; }
-.model .ti { font: 300 18px/1 "Segoe UI", system-ui, sans-serif; letter-spacing: .6px; }
-.model .nspire { font: italic 700 27px/1 Candara, "Segoe UI", system-ui, sans-serif; margin: 0 7px 0 1px; }
-.model .cx { font: 700 16.5px/1 "Nspire Keys", "Segoe UI", sans-serif; color: #bfe5ee; letter-spacing: .7px; }
-.cas { position: absolute; left: 326px; top: 12px; color: #f2eee8; font: 700 21px/1 "Nspire Keys", "Segoe UI", sans-serif; letter-spacing: .4px; }
-.maker { position: absolute; left: 0; right: 0; top: 823px; text-align: center; color: #b5b4af;
-  font: 700 14px/1 Candara, Optima, "Segoe UI", sans-serif; font-variant: small-caps; letter-spacing: .9px; }
+/* Below the touchpad: black too, a little lighter and matte. */
+.lower { position: absolute; left: 15px; right: 15px; top: 456px; bottom: 11px;
+  border-radius: 3px 3px 32px 32px / 3px 3px 42px 42px;
+  background: linear-gradient(#232221, #1d1c1b 50%, #1a1918);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 -1px 0 #000, 0 0 0 1px #121110; }
+/* "TI-nspire CX" and "CAS": a thin TI-, a calligraphic n, silver "spire" and "CAS". */
+.model { position: absolute; left: 134px; top: 7px; display: flex; align-items: baseline; white-space: nowrap; }
+.model .ti { font: 300 19px/1 "Segoe UI", system-ui, sans-serif; letter-spacing: 1px; color: #efeeea; }
+.model .n { font: italic 400 34px/1 Garamond, "Palatino Linotype", Georgia, serif; margin-left: -3px; }
+.model .spire { font: italic 700 25px/1 "Segoe UI", system-ui, sans-serif; letter-spacing: -.2px; margin: 0 4px 0 -6px; }
+.model .cx { font: italic 700 19px/1 "Century Gothic", "Segoe UI", sans-serif; color: #f5f5f2; letter-spacing: .4px; }
+.silver { padding: 0 3px; background: linear-gradient(#ffffff, #e7e8ea 38%, #a9adb3 56%, #eceef0 78%, #c4c8cc);
+  -webkit-background-clip: text; background-clip: text; color: transparent; }
+.cas { position: absolute; left: 320px; top: 9px; font: 700 23px/1 "Segoe UI", system-ui, sans-serif; letter-spacing: .4px; }
+.maker { position: absolute; left: 0; right: 0; top: 826px; display: flex; align-items: center; justify-content: center; gap: 5px; color: #c4c7c1; }
+.maker span { font: 700 14.5px/1 Constantia, "Palatino Linotype", Georgia, serif; font-variant: small-caps; letter-spacing: .5px; }
 .bezel { position: absolute; left: 49px; top: 45px; width: 326px; height: 246px; border-radius: 2px; background: #000; box-shadow: 0 0 0 1px #1f1f1f; }
 canvas { position: absolute; left: 52px; top: 48px; width: 320px; height: 240px; background: #000; image-rendering: pixelated; }
 .key { position: absolute; box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: 1.5px;
-  border-radius: 6px; color: #f6f4ef; font-size: 12.5px; line-height: 1; white-space: nowrap; cursor: pointer; touch-action: none;
+  border-radius: 6px; color: #f6f4ef; font-size: 16.5px; line-height: 1; letter-spacing: -.1px; white-space: nowrap;
+  cursor: pointer; touch-action: none;
   background: linear-gradient(#3c3b39, #1d1c1b 72%);
   box-shadow: 0 2px 0 #050505, 0 3px 4px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .16); }
 .key::after { content: ''; position: absolute; inset: -4px; }
-.key.small { font-size: 11.5px; }
+/* Bold humanist face around the touchpad; semibold and slimmer in the number rows. */
+.key.mid { font-weight: 600; font-size: 15.5px; }
+.key.small { font-size: 13.5px; }
 .key.num, .key.grey { background: linear-gradient(#8c8a87, #686663 75%); }
-.key.num { font-size: 19px; }
-.key.pair { font-size: 13.5px; }
+.key.num { font-weight: 600; font-size: 21px; }
+.key.pair { font-weight: 600; font-size: 15px; }
+.key .sym { font-size: 19px; font-weight: 700; }
 .key.pairL { border-radius: 6px 2px 2px 6px; }
 .key.pairR { border-radius: 2px 6px 6px 2px; }
-.key.letter { font-size: 12px; border-radius: 5px; }
+/* Letters: square keys with a big, round, bold face. */
+.key.letter { font-family: "Nspire Keys", "Segoe UI", sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 0; border-radius: 6px; }
 .key.ctrl { background: linear-gradient(#f7edbd, #e1cf8f 75%); color: #3b3423; }
 .key.down, .key.latched { transform: translateY(1.5px); filter: brightness(1.3);
   box-shadow: 0 .5px 0 #050505, inset 0 1px 3px rgba(0, 0, 0, .45); }
@@ -219,7 +239,7 @@ canvas { position: absolute; left: 52px; top: 48px; width: 320px; height: 240px;
 .stack { display: flex; flex-direction: column; align-items: center; gap: 1.5px; }
 .tri { font-size: 7px; }
 .label { position: absolute; height: 10px; display: flex; align-items: center; justify-content: center;
-  color: #b9e1eb; font-size: 8.5px; white-space: nowrap; pointer-events: none; }
+  color: #b9e1eb; font-family: "Segoe UI", system-ui, sans-serif; font-weight: 600; font-size: 9.5px; white-space: nowrap; pointer-events: none; }
 svg { fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
 /* The touchpad: a metal ring around a black pad. */
 .touchpad { position: absolute; left: 126px; top: 312px; width: 172px; height: 130px; box-sizing: border-box; padding: 5px;
@@ -252,8 +272,8 @@ class NspireEmu extends HTMLElement {
       <div class="calc" part="body">
         <div class="glass"></div>
         <div class="lower"></div>
-        <div class="model"><span class="ti">TI-</span><span class="nspire">nspire</span><span class="cx">CX</span></div>
-        <div class="cas">CAS</div>
+        <div class="model"><span class="ti">TI-</span><span class="n silver">n</span><span class="spire silver">spire</span><span class="cx">CX</span></div>
+        <div class="cas silver">CAS</div>
         <div class="bezel"></div>
         <canvas width="320" height="240" part="screen"></canvas>
         <div class="touchpad" role="button" aria-label="touchpad">
@@ -270,7 +290,7 @@ class NspireEmu extends HTMLElement {
         <div class="edge" style="left: 206px; top: 443.5px">${ICON.edgeBottom}</div>
         <div class="edge" style="left: 105.5px; top: 370.5px">${ICON.edgeLeft}</div>
         <div class="edge" style="left: 305.5px; top: 370.5px">${ICON.edgeRight}</div>
-        <div class="maker">Texas Instruments</div>
+        <div class="maker">${ICON.ti}<span>Texas Instruments</span></div>
       </div>`;
     this.calc = root.querySelector('.calc');
     this.canvas = root.querySelector('canvas');
