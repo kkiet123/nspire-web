@@ -123,20 +123,20 @@ function addFonts() {
 function keypad() {
   const stack = (top, below) => `<span class="stack">${top}${below}</span>`;
   const keys = [
-    ['esc', 'esc', 37, 317, 49, 26, 'fn', ICON.undo],
-    ['pad', ICON.pad, 37, 365, 49, 26, 'fn', 'save', 'scratchpad'],
-    ['tab', 'tab', 37, 413, 49, 26, 'fn'],
-    ['on', ICON.home + 'on', 338, 317, 49, 26, 'fn', 'off', 'on'],
-    ['doc', 'doc<span class="tri">▾</span>', 338, 365, 49, 26, 'fn', '+page', 'doc'],
-    ['menu', 'menu', 338, 413, 49, 26, 'fn', ICON.context],
+    ['esc', 'esc', 37, 331, 49, 26, 'fn', ICON.undo],
+    ['pad', ICON.pad, 37, 379, 49, 26, 'fn', 'save', 'scratchpad'],
+    ['tab', 'tab', 37, 427, 49, 26, 'fn'],
+    ['on', ICON.home + 'on', 338, 331, 49, 26, 'fn', 'off', 'on'],
+    ['doc', 'doc<span class="tri">▾</span>', 338, 379, 49, 26, 'fn', '+page', 'doc'],
+    ['menu', 'menu', 338, 427, 49, 26, 'fn', ICON.context],
     // The row under the touchpad, the number rows and enter use a lighter,
     // slimmer face than the keys around the touchpad ('mid').
-    ['ctrl', 'ctrl', 37, 470, 49, 25, 'ctrl mid'],
-    ['shift', ICON.shift + 'shift', 126, 470, 46, 25, 'fn mid small', 'CAPS', 'shift'],
-    ['var', 'var', 252, 470, 46, 25, 'fn mid', 'sto→'],
-    ['del', stack('del', ICON.back), 338, 470, 49, 25, 'fn mid', 'clear', 'del'],
+    ['ctrl', 'ctrl', 37, 484, 49, 25, 'ctrl mid'],
+    ['shift', ICON.shift + 'shift', 126, 484, 46, 25, 'fn mid small', 'CAPS', 'shift'],
+    ['var', 'var', 252, 484, 46, 25, 'fn mid', 'sto→'],
+    ['del', stack('del', ICON.back), 338, 484, 49, 25, 'fn mid', 'clear', 'del'],
   ];
-  const rowY = [512, 556, 600, 644];
+  const rowY = [526, 570, 614, 658];
   const sym = (s) => `<span class="sym">${s}</span>`;
   const leftPairs = [
     [['equ', sym('='), '|≠≥▸', '='], ['trig', stack('trig', '<span class="tri">▸</span>'), ICON.help, 'trig']],
@@ -164,7 +164,7 @@ function keypad() {
   });
   keys.push(['enter', 'enter', 318, rowY[3], 69.5, 28, 'fn mid', '≈']);
   const letters = [
-    [['ee', 'EE'], 'A', 'B', 'C', 'D', 'E', 'F', 'G', ['punct', '?!▸', 'punctuation']],
+    [['ee', '<span class="ee">EE</span>', 'EE'], 'A', 'B', 'C', 'D', 'E', 'F', 'G', ['punct', '?!▸', 'punctuation']],
     [['pi', 'π▸', 'pi'], 'H', 'I', 'J', 'K', 'L', 'M', 'N', ['flag', ICON.flag, 'flag']],
     [['comma', ','], 'O', 'P', 'Q', 'R', 'S', 'T', 'U', ['ret', ICON.ret, 'return']],
     [null, 'V', 'W', 'X', 'Y', 'Z', ['space', ICON.space, 'space']],
@@ -172,10 +172,11 @@ function keypad() {
   letters.forEach((row, r) => row.forEach((k, c) => {
     if (!k) return;
     const [name, label, spoken] = typeof k === 'string' ? ['a' + k.toLowerCase(), k] : k;
-    // Letter keys are square on the calculator; space spans two columns.
-    const width = name === 'space' ? 67.5 : 28;
+    // Letter keys are small squares, about 60 % of the column pitch, as on
+    // the calculator; space spans two columns.
+    const width = name === 'space' ? 63.5 : 24;
     const style = ['X', 'Y', 'Z'].includes(label) ? 'letter grey' : 'letter';   // grey on the calculator
-    keys.push([name, label, 41 + c * 39.5, 688 + r * 33, width, 28, style, '', spoken]);
+    keys.push([name, label, 43 + c * 39.5, 704 + r * 31, width, 24, style, '', spoken]);
   }));
   return keys;
 }
@@ -192,28 +193,30 @@ const STYLE = `
 :host(:focus-visible) .calc { box-shadow: 0 0 0 3px #5b9dff, 0 12px 34px rgba(0, 0, 0, .4); }
 .calc.drop { box-shadow: 0 0 0 4px #43a047, 0 12px 34px rgba(0, 0, 0, .4); }
 /* Glossy black glass from the top down to the touchpad band, a grey keypad below. */
-.glass { position: absolute; left: 15px; right: 15px; top: 6px; height: 450px; border-radius: 17px 17px 4px 4px; overflow: hidden;
+.glass { position: absolute; left: 15px; right: 15px; top: 6px; height: 464px; border-radius: 17px 17px 4px 4px; overflow: hidden;
   background: linear-gradient(178deg, #1c1b1a, #080808 16%, #050505); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), 0 0 0 1px #111; }
 .glass::after { content: ''; position: absolute; inset: 0;
   background: linear-gradient(116deg, rgba(255, 255, 255, .075), rgba(255, 255, 255, .02) 24%, transparent 42%); }
 /* Below the touchpad: black too, a little lighter and matte. */
-.lower { position: absolute; left: 15px; right: 15px; top: 456px; bottom: 11px;
+.lower { position: absolute; left: 15px; right: 15px; top: 470px; bottom: 11px;
   border-radius: 3px 3px 32px 32px / 3px 3px 42px 42px;
   background: linear-gradient(#232221, #1d1c1b 50%, #1a1918);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 -1px 0 #000, 0 0 0 1px #121110; }
 /* "TI-nspire CX" and "CAS": a thin TI-, a calligraphic n, silver "spire" and "CAS". */
-.model { position: absolute; left: 134px; top: 7px; display: flex; align-items: baseline; white-space: nowrap; }
+/* One baseline for the model name and "CAS". */
+.brand { position: absolute; left: 0; right: 0; top: 18px; display: flex; align-items: baseline; white-space: nowrap; }
+.model { display: flex; align-items: baseline; margin-left: 134px; }
 .model .ti { font: 300 19px/1 "Segoe UI", system-ui, sans-serif; letter-spacing: 1px; color: #efeeea; }
 .model .n { font: italic 400 34px/1 Garamond, "Palatino Linotype", Georgia, serif; margin-left: -3px; }
 .model .spire { font: italic 700 25px/1 "Segoe UI", system-ui, sans-serif; letter-spacing: -.2px; margin: 0 4px 0 -6px; }
-.model .cx { font: italic 700 19px/1 "Century Gothic", "Segoe UI", sans-serif; color: #f5f5f2; letter-spacing: .4px; }
+.model .cx { font: italic 700 19px/1 "Segoe UI", system-ui, sans-serif; color: #f5f5f2; letter-spacing: .6px; }
 .silver { padding: 0 3px; background: linear-gradient(#ffffff, #e7e8ea 38%, #a9adb3 56%, #eceef0 78%, #c4c8cc);
   -webkit-background-clip: text; background-clip: text; color: transparent; }
-.cas { position: absolute; left: 320px; top: 9px; font: 700 23px/1 "Segoe UI", system-ui, sans-serif; letter-spacing: .4px; }
-.maker { position: absolute; left: 0; right: 0; top: 826px; display: flex; align-items: center; justify-content: center; gap: 5px; color: #c4c7c1; }
+.cas { margin: 0 55px 0 auto; font: 700 23px/1 "Segoe UI", system-ui, sans-serif; letter-spacing: .4px; }
+.maker { position: absolute; left: 0; right: 0; top: 830px; display: flex; align-items: center; justify-content: center; gap: 5px; color: #c4c7c1; }
 .maker span { font: 700 14.5px/1 Constantia, "Palatino Linotype", Georgia, serif; font-variant: small-caps; letter-spacing: .5px; }
-.bezel { position: absolute; left: 49px; top: 45px; width: 326px; height: 246px; border-radius: 2px; background: #000; box-shadow: 0 0 0 1px #1f1f1f; }
-canvas { position: absolute; left: 52px; top: 48px; width: 320px; height: 240px; background: #000; image-rendering: pixelated; }
+.bezel { position: absolute; left: 49px; top: 59px; width: 326px; height: 246px; border-radius: 2px; background: #000; box-shadow: 0 0 0 1px #1f1f1f; }
+canvas { position: absolute; left: 52px; top: 62px; width: 320px; height: 240px; background: #000; image-rendering: pixelated; }
 .key { position: absolute; box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: 1.5px;
   border-radius: 6px; color: #f6f4ef; font-size: 16.5px; line-height: 1; letter-spacing: -.1px; white-space: nowrap;
   cursor: pointer; touch-action: none;
@@ -230,7 +233,8 @@ canvas { position: absolute; left: 52px; top: 48px; width: 320px; height: 240px;
 .key.pairL { border-radius: 6px 2px 2px 6px; }
 .key.pairR { border-radius: 2px 6px 6px 2px; }
 /* Letters: square keys with a big, round, bold face. */
-.key.letter { font-family: "Nspire Keys", "Segoe UI", sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 0; border-radius: 6px; }
+.key.letter { font-family: "Nspire Keys", "Segoe UI", sans-serif; font-weight: 700; font-size: 11.5px; letter-spacing: 0; border-radius: 5px; }
+.key .ee { font-size: 9.5px; }
 .key.ctrl { background: linear-gradient(#f7edbd, #e1cf8f 75%); color: #3b3423; }
 .key.down, .key.latched { transform: translateY(1.5px); filter: brightness(1.3);
   box-shadow: 0 .5px 0 #050505, inset 0 1px 3px rgba(0, 0, 0, .45); }
@@ -242,7 +246,7 @@ canvas { position: absolute; left: 52px; top: 48px; width: 320px; height: 240px;
   color: #b9e1eb; font-family: "Segoe UI", system-ui, sans-serif; font-weight: 600; font-size: 9.5px; white-space: nowrap; pointer-events: none; }
 svg { fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
 /* The touchpad: a metal ring around a black pad. */
-.touchpad { position: absolute; left: 126px; top: 312px; width: 172px; height: 130px; box-sizing: border-box; padding: 5px;
+.touchpad { position: absolute; left: 126px; top: 326px; width: 172px; height: 130px; box-sizing: border-box; padding: 5px;
   border-radius: 30px; touch-action: none; cursor: pointer;
   background: linear-gradient(150deg, #f1e9df, #cbbdad 28%, #8f8276 62%, #b8aa9a);
   box-shadow: 0 1px 3px rgba(0, 0, 0, .8), inset 0 0 0 1px rgba(0, 0, 0, .35); }
@@ -272,8 +276,10 @@ class NspireEmu extends HTMLElement {
       <div class="calc" part="body">
         <div class="glass"></div>
         <div class="lower"></div>
-        <div class="model"><span class="ti">TI-</span><span class="n silver">n</span><span class="spire silver">spire</span><span class="cx">CX</span></div>
-        <div class="cas silver">CAS</div>
+        <div class="brand">
+          <div class="model"><span class="ti">TI-</span><span class="n silver">n</span><span class="spire silver">spire</span><span class="cx">CX</span></div>
+          <div class="cas silver">CAS</div>
+        </div>
         <div class="bezel"></div>
         <canvas width="320" height="240" part="screen"></canvas>
         <div class="touchpad" role="button" aria-label="touchpad">
@@ -286,10 +292,10 @@ class NspireEmu extends HTMLElement {
             <div class="dot"></div>
           </div>
         </div>
-        <div class="edge" style="left: 199px; top: 297px">${ICON.edgeTop}</div>
-        <div class="edge" style="left: 206px; top: 443.5px">${ICON.edgeBottom}</div>
-        <div class="edge" style="left: 105.5px; top: 370.5px">${ICON.edgeLeft}</div>
-        <div class="edge" style="left: 305.5px; top: 370.5px">${ICON.edgeRight}</div>
+        <div class="edge" style="left: 199px; top: 311px">${ICON.edgeTop}</div>
+        <div class="edge" style="left: 206px; top: 457.5px">${ICON.edgeBottom}</div>
+        <div class="edge" style="left: 105.5px; top: 384.5px">${ICON.edgeLeft}</div>
+        <div class="edge" style="left: 305.5px; top: 384.5px">${ICON.edgeRight}</div>
         <div class="maker">${ICON.ti}<span>Texas Instruments</span></div>
       </div>`;
     this.calc = root.querySelector('.calc');
