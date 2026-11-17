@@ -152,7 +152,7 @@ function keypad() {
     [['n7', '7'], ['n8', '8'], ['n9', '9']],
     [['n4', '4'], ['n5', '5'], ['n6', '6']],
     [['n1', '1'], ['n2', '2'], ['n3', '3']],
-    [['n0', '0'], ['dot', '.', 'capture'], ['neg', '(−)', 'ans', 'negative']],
+    [['n0', '0'], ['dot', '<span class="dp"></span>', 'capture', 'decimal point'], ['neg', '<span class="neg">(−)</span>', 'ans', 'negative']],
   ];
   const rightPairs = [
     [['metrix', ICON.templates, ':=', 'templates'], ['cat', ICON.catalog, '∞β°', 'catalog']],
@@ -185,12 +185,20 @@ function keypad() {
   return keys;
 }
 
+// A fine grain for the matte plastic, as on the calculator: faint white
+// specks, tiled over the side rails, the keypad and the keys.
+const GRAIN = `url("data:image/svg+xml,${encodeURIComponent(
+  "<svg xmlns='http://www.w3.org/2000/svg' width='90' height='90'>"
+  + "<filter id='g'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/>"
+  + "<feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .5 -.2'/></filter>"
+  + "<rect width='90' height='90' filter='url(#g)'/></svg>")}")`;
+
 const STYLE = `
 :host { display: inline-block; vertical-align: top; outline: none; -webkit-tap-highlight-color: transparent; }
 .calc { position: relative; width: ${W}px; height: ${H}px; box-sizing: border-box;
   border-radius: 24px 24px 44px 44px / 24px 24px 56px 56px;
   /* the grey side rails */
-  background: linear-gradient(90deg, #353331, #6f6b66 1.3%, #5d5a56 2.6%, #4b4845 3.6%, #4b4845 96.4%, #5d5a56 97.4%, #6f6b66 98.7%, #353331);
+  background: ${GRAIN}, linear-gradient(90deg, #353331, #67635e 1.3%, #5a5753 2.6%, #4b4845 3.6%, #4b4845 96.4%, #5a5753 97.4%, #67635e 98.7%, #353331);
   box-shadow: 0 12px 34px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(255, 255, 255, .14);
   font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif; font-weight: 700;
   user-select: none; -webkit-user-select: none; cursor: default; }
@@ -200,11 +208,11 @@ const STYLE = `
 .glass { position: absolute; left: 15px; right: 15px; top: 6px; height: 464px; border-radius: 17px 17px 4px 4px; overflow: hidden;
   background: linear-gradient(178deg, #1c1b1a, #080808 16%, #050505); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), 0 0 0 1px #111; }
 .glass::after { content: ''; position: absolute; inset: 0;
-  background: linear-gradient(116deg, rgba(255, 255, 255, .075), rgba(255, 255, 255, .02) 24%, transparent 42%); }
+  background: linear-gradient(116deg, rgba(255, 255, 255, .04), rgba(255, 255, 255, .012) 24%, transparent 42%); }
 /* Below the touchpad: black too, a little lighter and matte. */
 .lower { position: absolute; left: 15px; right: 15px; top: 470px; bottom: 11px;
   border-radius: 3px 3px 32px 32px / 3px 3px 42px 42px;
-  background: linear-gradient(#232221, #1d1c1b 50%, #1a1918);
+  background: ${GRAIN}, linear-gradient(#1d1c1b, #191817 50%, #171615);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 -1px 0 #000, 0 0 0 1px #121110; }
 /* "TI-nspire CX" and "CAS": a thin TI-, a calligraphic n, silver "spire" and "CAS". */
 /* One baseline for the model name and "CAS". */
@@ -229,13 +237,14 @@ canvas { position: absolute; left: 52px; top: 62px; width: 320px; height: 240px;
 .key { position: absolute; box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: 1.5px;
   border-radius: 6px; color: #f6f4ef; font-size: 16.5px; line-height: 1; letter-spacing: -.1px; white-space: nowrap;
   cursor: pointer; touch-action: none;
-  background: linear-gradient(#3c3b39, #1d1c1b 72%);
-  box-shadow: 0 2px 0 #050505, 0 3px 4px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .16); }
+  /* Matte, not glossy: a nearly flat colour with grain, a faint top edge. */
+  background: ${GRAIN}, linear-gradient(#2c2b29, #252422 55%, #21201e);
+  box-shadow: 0 1.5px 0 #0a0a09, 0 2px 3px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(255, 255, 255, .07), inset 0 -1px 0 rgba(0, 0, 0, .3); }
 .key::after { content: ''; position: absolute; inset: -4px; }
 /* Bold humanist face around the touchpad; semibold and slimmer in the number rows. */
 .key.mid { font-weight: 600; font-size: 15.5px; }
 .key.small { font-size: 13.5px; }
-.key.num, .key.grey { background: linear-gradient(#8c8a87, #686663 75%); }
+.key.num, .key.grey { background: ${GRAIN}, linear-gradient(#73716d, #6c6a66 55%, #666460); }
 .key.num { font-weight: 600; font-size: 21px; }
 .key.pair { font-weight: 600; font-size: 15px; }
 .key .sym { font-size: 19px; font-weight: 700; }
@@ -244,9 +253,13 @@ canvas { position: absolute; left: 52px; top: 62px; width: 320px; height: 240px;
 /* Letters: square keys with a big, round, bold face. */
 .key.letter { font-family: "Nspire Keys", "Segoe UI", sans-serif; font-weight: 700; font-size: 11.5px; letter-spacing: 0; border-radius: 4px; }
 .key .ee { font-size: 9.5px; }
-.key.ctrl { background: linear-gradient(#f7edbd, #e1cf8f 75%); color: #3b3423; }
-.key.down, .key.latched { transform: translateY(1.5px); filter: brightness(1.3);
-  box-shadow: 0 .5px 0 #050505, inset 0 1px 3px rgba(0, 0, 0, .45); }
+/* (−) is smaller and thinner than the digits; the decimal point sits 35 % up the key. */
+.key .neg { font-size: 15.5px; font-weight: 400; letter-spacing: .6px; }
+.key .dp { position: absolute; left: 50%; bottom: 35%; width: 3.6px; height: 3.6px; margin: 0 0 -1.8px -1.8px;
+  border-radius: 50%; background: currentColor; }
+.key.ctrl { background: ${GRAIN}, linear-gradient(#ece2ae, #e3d6a0 55%, #dacd96); color: #3b3423; }
+.key.down, .key.latched { transform: translateY(1.5px); filter: brightness(1.25);
+  box-shadow: 0 .5px 0 #0a0a09, inset 0 1px 2px rgba(0, 0, 0, .4); }
 .key.latched { outline: 1.5px solid #79b8ff; outline-offset: 1px; }
 .key svg { flex: none; }
 .stack { display: flex; flex-direction: column; align-items: center; gap: 1.5px; }
@@ -257,7 +270,7 @@ svg { fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round
 /* The touchpad: a metal ring around a black pad. */
 .touchpad { position: absolute; left: 126px; top: 326px; width: 172px; height: 130px; box-sizing: border-box; padding: 5px;
   border-radius: 30px; touch-action: none; cursor: pointer;
-  background: linear-gradient(150deg, #f1e9df, #cbbdad 28%, #8f8276 62%, #b8aa9a);
+  background: linear-gradient(150deg, #ddd3c6, #b9ad9f 30%, #958a7f 65%, #b0a597);
   box-shadow: 0 1px 3px rgba(0, 0, 0, .8), inset 0 0 0 1px rgba(0, 0, 0, .35); }
 .surface { position: relative; height: 100%; border-radius: 25px; overflow: hidden;
   background: radial-gradient(ellipse at 50% 28%, #2b2927, #0d0c0b 72%);
